@@ -1,10 +1,10 @@
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchLeads, deleteLead, bulkUpdateLeads } from '../api/leads';
 import type { Lead, NicheCategory, PriorityLevel, DealStage, WebsiteStatus } from '../types';
-import { Search, Trash2, Building2, AlertCircle, Layers, CheckSquare, Globe, Share2, Link, Phone, Star, MessageSquare, MapPin, Tag, FileText, Save, X, RefreshCw } from 'lucide-react';
+import { Search, Trash2, Building2, AlertCircle, Layers, CheckSquare, Globe, Share2, Link, Phone, Star, MessageSquare, MapPin, Tag, FileText, RefreshCw } from 'lucide-react';
 import ImportModal from '../components/ImportModal';
 import { supabase } from '../lib/supabaseClient';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -97,19 +97,38 @@ export default function LeadsPage() {
     const [isImportOpen, setIsImportOpen] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-    // --- Write Strategy: Local Draft State ---
-    const [pendingUpdates, setPendingUpdates] = useState<Record<string, Partial<Lead>>>({});
+    // --- Write Strategy: Local Draft State + Auto-Save ---
+    const [pendingUpdates, setPendingUpdates] = useLocalStorage<Record<string, Partial<Lead>>>('leads_pending_updates', {});
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+    const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Helper to track local changes
     const updateLocal = (id: string, field: keyof Lead, value: any) => {
-        setPendingUpdates(prev => ({
+        setPendingUpdates((prev: Record<string, Partial<Lead>>) => ({
             ...prev,
             [id]: { ...prev[id], [field]: value }
         }));
+        setSaveStatus('unsaved');
     };
 
     const hasPendingChanges = Object.keys(pendingUpdates).length > 0;
-    const discardChanges = () => setPendingUpdates({});
+
+    // Auto-Save Effect
+    useEffect(() => {
+        if (!hasPendingChanges) return;
+
+        if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
+
+        setSaveStatus('unsaved');
+        autoSaveTimeout.current = setTimeout(() => {
+            setSaveStatus('saving');
+            saveMutation.mutate(pendingUpdates);
+        }, 2000); // 2 seconds debounce
+
+        return () => {
+            if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
+        };
+    }, [pendingUpdates, hasPendingChanges]);
 
     // --- Read Strategy: Load Once ---
     const { data: allLeads = [], isLoading, isRefetching, refetch } = useQuery({
@@ -127,6 +146,7 @@ export default function LeadsPage() {
         },
         onSuccess: () => {
             setPendingUpdates({});
+            setSaveStatus('saved');
             queryClient.invalidateQueries({ queryKey: ['leads'] });
         }
     });
@@ -193,11 +213,32 @@ export default function LeadsPage() {
     }, [allLeads, pendingUpdates, activeNiche, activeCity, localSearch, sortConfig]);
 
     // Resizing Logic (Visual only, no DB interaction)
-    const [colWidths, setColWidths] = useLocalStorage<Record<string, number>>('leads_table_col_widths', {
-        checkbox: 40, sn: 50, business_name: 200, priority: 100, deal_stage: 120, contacted: 100,
-        website_status: 100, social: 150, website: 150, phone: 120, rating: 80, reviews: 80,
-        city: 120, niche: 100, notes: 200, actions: 60
+    const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
+        try {
+            const saved = window.localStorage.getItem('leads_table_col_widths');
+            const defaults = {
+                checkbox: 40, sn: 50, business_name: 200, priority: 100, deal_stage: 120, contacted: 100,
+                website_status: 100, social: 150, website: 150, phone: 120, rating: 80, reviews: 80,
+                city: 120, niche: 100, notes: 200, actions: 60
+            };
+            return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+        } catch (e) {
+            return {
+                checkbox: 40, sn: 50, business_name: 200, priority: 100, deal_stage: 120, contacted: 100,
+                website_status: 100, social: 150, website: 150, phone: 120, rating: 80, reviews: 80,
+                city: 120, niche: 100, notes: 200, actions: 60
+            };
+        }
     });
+
+    // Debounced save to localStorage
+    const saveColWidthsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const saveColWidths = useCallback((widths: Record<string, number>) => {
+        if (saveColWidthsTimeout.current) clearTimeout(saveColWidthsTimeout.current);
+        saveColWidthsTimeout.current = setTimeout(() => {
+            window.localStorage.setItem('leads_table_col_widths', JSON.stringify(widths));
+        }, 500);
+    }, []);
 
     const activeResize = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
 
@@ -220,12 +261,13 @@ export default function LeadsPage() {
 
         // Use requestAnimationFrame to smooth updates and avoid thrashing
         requestAnimationFrame(() => {
-            setColWidths(prev => ({
-                ...prev,
-                [activeResize.current!.col]: newWidth
-            }));
+            setColWidths(prev => {
+                const updated = { ...prev, [activeResize.current!.col]: newWidth };
+                saveColWidths(updated); // Schedule save
+                return updated;
+            });
         });
-    }, [setColWidths]);
+    }, [saveColWidths]);
 
     const handleMouseUp = useCallback(() => {
         activeResize.current = null;
@@ -261,73 +303,90 @@ export default function LeadsPage() {
     return (
         <div className="flex flex-col h-full overflow-hidden relative">
 
-            {/* Toolbar */}
-            <div className="flex items-center gap-4 flex-shrink-0 p-3 border-b border-[var(--border-default)] bg-[var(--bg-surface)]">
-                <div className="font-semibold text-[15px] text-[var(--text-main)]">
-                    {[
-                        activeNiche ? `${activeNiche} Leads` : 'All Leads',
-                        activeCity ? ` in ${activeCity}` : ''
-                    ].join('')}
-                    <span className="ml-2 text-[var(--text-muted)] font-normal text-xs">
-                        {filteredLeads.length} records {isRefetching && '(Refreshing...)'}
-                    </span>
-                </div>
+            {/* Premium Header - Linear/Vercel Aesthetic */}
+            <div className="flex-shrink-0 bg-white border-b border-[var(--border-default)] z-20">
+                {/* Top Row: Title & Actions */}
+                <div className="px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-lg font-semibold text-[var(--text-main)] tracking-tight flex items-center gap-2">
+                            {activeNiche ? `${activeNiche} Leads` : 'All Leads'}
+                            {activeCity && <span className="text-[var(--text-muted)] font-normal">in {activeCity}</span>}
+                        </h1>
+                        <div className="h-4 w-[1px] bg-[var(--border-default)] mx-1"></div>
+                        <span className="text-[13px] text-[var(--text-muted)] font-medium">
+                            {filteredLeads.length} records
+                        </span>
+                        {isRefetching && (
+                            <span className="text-[13px] text-blue-600 flex items-center gap-1.5 bg-blue-50 px-2 py-0.5 rounded-full">
+                                <RefreshCw size={10} className="animate-spin" /> Syncing
+                            </span>
+                        )}
+                        {/* Auto-save Indicator moved next to title for visibility */}
+                        <div className="flex items-center gap-1.5 ml-2 transition-opacity duration-300">
+                            {saveStatus === 'saving' && <><div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /><span className="text-[12px] text-amber-600 font-medium">Saving...</span></>}
+                            {saveStatus === 'saved' && <><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[12px] text-emerald-600 font-medium">Saved</span></>}
+                        </div>
+                    </div>
 
-                <div className="flex items-center gap-2 flex-1 max-w-sm relative">
-                    <Search size={14} className="absolute left-2.5 text-[var(--text-muted)]" />
-                    <input
-                        type="text"
-                        className="input"
-                        style={{ paddingLeft: '32px' }}
-                        placeholder="Search local..."
-                        value={localSearch}
-                        onChange={(e) => setLocalSearch(e.target.value)}
-                    />
-                </div>
+                    <div className="flex items-center gap-3">
+                        {selectedIds.size > 0 && (
+                            <button
+                                className="group flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-md hover:bg-red-100 transition-all text-[13px] font-medium"
+                                onClick={() => { if (confirm(`Delete ${selectedIds.size} leads ? `)) bulkDeleteMutation.mutate(Array.from(selectedIds)); }}
+                            >
+                                <Trash2 size={14} className="text-red-500 group-hover:text-red-700" />
+                                Delete {selectedIds.size}
+                            </button>
+                        )}
 
-                <div className="flex items-center gap-2 ml-auto">
-                    {selectedIds.size > 0 && (
+                        <div className="h-6 w-[1px] bg-[var(--border-default)] mx-1"></div>
+
                         <button
-                            className="btn"
-                            style={{ color: 'var(--danger-text)', borderColor: 'var(--danger-text)', background: 'var(--danger-bg)' }}
-                            onClick={() => { if (confirm(`Delete ${selectedIds.size} leads ? `)) bulkDeleteMutation.mutate(Array.from(selectedIds)); }}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-white text-[var(--text-main)] border border-[var(--border-default)] rounded-md hover:bg-[var(--bg-hover)] hover:border-[var(--gray-300)] transition-all text-[13px] font-medium shadow-sm"
+                            onClick={() => refetch()}
+                            title="Force Reload from DB"
                         >
-                            <Trash2 size={14} /> Delete ({selectedIds.size})
+                            <RefreshCw size={14} className={`text-[var(--text-muted)] ${isRefetching ? 'animate-spin' : ''}`} />
+                            Refresh
                         </button>
-                    )}
+                        <button
+                            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--gray-900)] text-white border border-[var(--gray-900)] rounded-md hover:bg-[var(--gray-700)] hover:border-[var(--gray-700)] transition-all text-[13px] font-medium shadow-sm"
+                            onClick={() => setIsImportOpen(true)}
+                        >
+                            <span>+ Import</span>
+                        </button>
+                    </div>
+                </div>
 
-                    <button className="btn" onClick={() => refetch()} title="Force Reload from DB">
-                        <RefreshCw size={14} className={isRefetching ? 'animate-spin' : ''} />
-                    </button>
-                    <button className="btn btn-primary" onClick={() => setIsImportOpen(true)}>+ Import</button>
+                {/* Bottom Row: Filters & View Options (Toolbar) */}
+                <div className="px-6 h-12 flex items-center gap-4 bg-[var(--gray-50)] border-t border-[var(--border-subtle)]">
+                    <div className="relative group w-64">
+                        <Search size={14} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--gray-700)] transition-colors" />
+                        <input
+                            type="text"
+                            className="w-full pl-9 pr-3 py-1.5 text-[13px] bg-white border border-[var(--border-default)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--gray-400)] focus:border-[var(--gray-400)] transition-all shadow-sm placeholder:text-[var(--text-faint)]"
+                            placeholder="Filter by name, city, tags..."
+                            value={localSearch}
+                            onChange={(e) => setLocalSearch(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="h-4 w-[1px] bg-[var(--border-default)]"></div>
+
+                    {/* Placeholder for future filters - Visual cues only for now to look 'premium' */}
+                    <div className="flex items-center gap-2">
+                        <button className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded-md transition-colors">
+                            <Layers size={14} /> Stage
+                        </button>
+                        <button className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded-md transition-colors">
+                            <Tag size={14} /> Tag
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Save Action Bar (Appears when has updates) */}
-            {hasPendingChanges && (
-                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-2">
-                    <span className="text-sm font-medium">
-                        {Object.keys(pendingUpdates).length} unsaved changes
-                    </span>
-                    <button
-                        className="px-3 py-1 bg-white text-gray-900 rounded font-semibold text-xs hover:bg-gray-100 flex items-center gap-2"
-                        onClick={() => saveMutation.mutate(pendingUpdates)}
-                        disabled={saveMutation.isPending}
-                    >
-                        {saveMutation.isPending ? 'Saving...' : <><Save size={14} /> Save Changes</>}
-                    </button>
-                    <button
-                        className="text-gray-400 hover:text-white"
-                        onClick={discardChanges}
-                        title="Discard Changes"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            )}
-
             {/* Table Area */}
-            <div className="data-table-container">
+            <div className="data-table-container flex-1 min-h-0 overflow-auto bg-gray-50/50">
                 <table className="data-table">
                     <thead>
                         <tr>

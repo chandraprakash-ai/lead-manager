@@ -230,7 +230,8 @@ select.no-arrow {
   font-size: 13px;
   color: inherit;
   cursor: pointer;
-  padding-right: 1.5em;
+  align-items: center;
+  padding: 2px 8px;
   /* Room for dummy arrow if needed */
 }
 
@@ -242,7 +243,9 @@ select.no-arrow {
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 500;
+  text-align: center;
   white-space: nowrap;
+
 }
 
 /* --- Data Table Style --- */
