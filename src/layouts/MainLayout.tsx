@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, MapPin, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
+import './MainLayout.css';
 import type { NicheCategory } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -12,25 +13,25 @@ export default function MainLayout() {
 
     return (
         <div className="app-layout">
-            <aside className={`sidebar transition-all duration-300 ${isCollapsed ? 'w-[60px]' : 'w-[240px]'}`} style={{ width: isCollapsed ? '60px' : '240px' }}>
-                <div style={{ padding: '0 16px 16px', display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'space-between' }}>
+            <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+                <div className="sidebar-header">
                     {!isCollapsed && (
-                        <h2 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                        <h2 className="brand-logo">
                             <Users size={18} /> LeadTrack
                         </h2>
                     )}
-                    <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-gray-500 hover:text-gray-900 p-1">
+                    <button onClick={() => setIsCollapsed(!isCollapsed)} className="btn-toggle-sidebar">
                         {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                     </button>
                 </div>
 
-                <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+                <nav className="sidebar-nav">
                     <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={isCollapsed ? "Dashboard" : ""}>
-                        <LayoutDashboard size={16} style={{ minWidth: '16px' }} /> {!isCollapsed && "Dashboard"}
+                        <LayoutDashboard size={16} className="nav-icon" /> {!isCollapsed && "Dashboard"}
                     </NavLink>
 
                     <NavLink to="/leads" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={isCollapsed ? "All Leads" : ""}>
-                        <Users size={16} style={{ minWidth: '16px' }} /> {!isCollapsed && "All Leads"}
+                        <Users size={16} className="nav-icon" /> {!isCollapsed && "All Leads"}
                     </NavLink>
 
                     {!isCollapsed && <div className="nav-section-title">Niches</div>}
@@ -41,7 +42,7 @@ export default function MainLayout() {
                             className={() => `nav-item ${location.search.includes(niche) ? 'active' : ''}`}
                             title={isCollapsed ? niche : ""}
                         >
-                            <Briefcase size={14} style={{ minWidth: '14px' }} /> {!isCollapsed && niche}
+                            <Briefcase size={14} className="nav-icon" /> {!isCollapsed && niche}
                         </NavLink>
                     ))}
 
@@ -53,13 +54,13 @@ export default function MainLayout() {
                             className={() => `nav-item ${location.search.includes(city) ? 'active' : ''}`}
                             title={isCollapsed ? city : ""}
                         >
-                            <MapPin size={14} style={{ minWidth: '14px' }} /> {!isCollapsed && city}
+                            <MapPin size={14} className="nav-icon" /> {!isCollapsed && city}
                         </NavLink>
                     ))}
                 </nav>
 
-                <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)', display: isCollapsed ? 'none' : 'block' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <div className="sidebar-footer">
+                    <div className="footer-text">
                         Internal Ops Tool
                     </div>
                 </div>
