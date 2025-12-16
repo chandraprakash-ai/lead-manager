@@ -1,0 +1,386 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  /* --- Design System Tokens --- */
+
+  /* Neutral Scale (Slate-ish Grays) */
+  --gray-0: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* Brand Colors */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-500: #3b82f6;
+  /* Electric Blue */
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+
+  /* Semantic State Colors (Pastel Backgrounds / Strong Text) */
+  --success-bg: #dcfce7;
+  --success-text: #15803d;
+  --warning-bg: #fef9c3;
+  --warning-text: #a16207;
+  --danger-bg: #fee2e2;
+  --danger-text: #b91c1c;
+  --info-bg: #e0f2fe;
+  --info-text: #0369a1;
+
+  /* Component Mappings */
+  --bg-app: var(--gray-50);
+  /* App background */
+  --bg-surface: var(--gray-0);
+  /* Card/Table background */
+  --bg-hover: var(--gray-50);
+  /* Hover state */
+  --bg-active: var(--gray-100);
+  /* Active/Pressed state */
+
+  --text-main: var(--gray-900);
+  --text-muted: var(--gray-500);
+  --text-faint: var(--gray-400);
+
+  --border-subtle: var(--gray-100);
+  --border-default: var(--gray-200);
+  --border-focus: var(--primary-200);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Reset & Base --- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-size: 13px;
+  /* Data density */
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+/* --- Layout Utilities --- */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.sidebar {
+  width: 240px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 16px 8px;
+  z-index: 20;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Scroll handled internally */
+  background: var(--bg-surface);
+  /* Make main area white for clean look */
+  margin: 0;
+  /* No gaps */
+}
+
+/* --- Navigation --- */
+.nav-section-title {
+  padding: 12px 12px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 2px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.nav-item.active {
+  background: var(--primary-50);
+  color: var(--primary-700);
+}
+
+/* --- Components --- */
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  height: 32px;
+  /* Uniform height */
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--gray-300);
+}
+
+.btn:active {
+  background: var(--bg-active);
+  transform: translateY(0px);
+}
+
+.btn-primary {
+  background: var(--primary-500);
+  border-color: var(--primary-600);
+  color: white;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--primary-600);
+}
+
+/* Inputs */
+.input {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-main);
+  background: var(--bg-surface);
+  width: 100%;
+  transition: border 0.15s, box-shadow 0.15s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-50);
+}
+
+/* Selects */
+select.no-arrow {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: inherit;
+  cursor: pointer;
+  padding-right: 1.5em;
+  /* Room for dummy arrow if needed */
+}
+
+/* Tags / Pills */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* --- Data Table Style --- */
+.data-table-container {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background: var(--bg-surface);
+}
+
+.data-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Header */
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.95);
+  /* Glassy default */
+}
+
+.data-table th {
+  text-align: left;
+  padding: 0 16px;
+  height: 40px;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+}
+
+.data-table th:hover {
+  background: var(--bg-hover);
+}
+
+/* Rows & Cells */
+.data-table tbody tr {
+  transition: background 0.1s;
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.data-table td {
+  padding: 0 16px;
+  height: 48px;
+  /* Comfortable hit area */
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Sticky First Column */
+.data-table th:first-child,
+.data-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+}
+
+.data-table th:first-child {
+  z-index: 40;
+  /* Above regular headers */
+}
+
+.data-table tbody tr:hover td:first-child {
+  background: var(--bg-hover);
+}
+
+/* Resizer Handle */
+.resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  z-index: 50;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.resizer:hover,
+.data-table th:hover .resizer {
+  background: var(--primary-200);
+  opacity: 1;
+}
+
+/* Input inside Cell */
+.input-cell {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 4px 6px;
+  margin-left: -6px;
+  /* Visual alignment */
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  /* Elipsis text only works well on block types usually, keep input standard */
+}
+
+.input-cell:focus {
+  background: var(--gray-0);
+  border-color: var(--border-focus);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-50);
+}
+
+/* --- Utilities --- */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.p-4 {
+  padding: 16px;
+}
