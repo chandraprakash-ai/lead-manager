@@ -1,18 +1,19 @@
 import React, { useState, useRef } from 'react';
 import {
     AlertCircle, Building2, CheckSquare, FileText, Globe, Layers, Link, MapPin,
-    MessageSquare, Phone, Plus, Share2, Star, Tag
+    MessageSquare, Phone, Plus, Share2, Star, Tag, Mail
 } from 'lucide-react';
-import type { Lead } from '../../../types';
+import type { Lead, CustomField } from '../../../types';
 import { HeaderLabel, PrioritySelect, StageSelect, WebsiteStatusSelect } from '../LeadsTableCells';
 import './LeadsTable.css';
 
 interface LeadsTableProps {
     leads: Lead[];
+    customFields: CustomField[];
     visibleColumns: Set<string>;
     selectedIds: Set<string>;
     onSelectionChange: (ids: Set<string>) => void;
-    onUpdateLead: (id: string, field: keyof Lead, value: any) => void;
+    onUpdateLead: (id: string, field: keyof Lead | string, value: any) => void;
     pendingUpdates: Record<string, any>;
     sortConfig: { field: keyof Lead; order: 'asc' | 'desc' } | null;
     onSortChange: (field: keyof Lead | null) => void;
@@ -44,6 +45,7 @@ const ResizableHeader = ({ col, label, width, sortConfig, onSort, onResizeStart 
 
 export const LeadsTable = ({
     leads,
+    customFields,
     visibleColumns,
     selectedIds,
     onSelectionChange,
@@ -55,7 +57,7 @@ export const LeadsTable = ({
 }: LeadsTableProps) => {
     // Local state for column widths (visual only)
     const [colWidths, setColWidths] = useState<Record<string, number>>({
-        checkbox: 40, sn: 60, business_name: 220, priority: 140, deal_stage: 160,
+        checkbox: 40, sn: 60, business_name: 220, email: 200, priority: 140, deal_stage: 160,
         contacted: 100, website_status: 150, social: 180, website: 180,
         phone: 150, rating: 100, reviews: 100, city: 140, niche: 140, notes: 300
     });
@@ -114,12 +116,16 @@ export const LeadsTable = ({
                         {visibleColumns.has('contacted') && <ResizableHeader col="contacted" label={<HeaderLabel icon={CheckSquare} text="Contacted" />} width={colWidths.contacted} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('website_status') && <ResizableHeader col="website_status" label={<HeaderLabel icon={Globe} text="Web Status" />} width={colWidths.website_status} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('social') && <ResizableHeader col="social" label={<HeaderLabel icon={Share2} text="Social" />} width={colWidths.social} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
+                        {visibleColumns.has('email') && <ResizableHeader col="email" label={<HeaderLabel icon={Mail} text="Email" />} width={colWidths.email} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('website') && <ResizableHeader col="website" label={<HeaderLabel icon={Link} text="Website" />} width={colWidths.website} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('phone') && <ResizableHeader col="phone" label={<HeaderLabel icon={Phone} text="Phone" />} width={colWidths.phone} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('rating') && <ResizableHeader col="rating" label={<HeaderLabel icon={Star} text="Rating" />} width={colWidths.rating} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('reviews') && <ResizableHeader col="reviews" label={<HeaderLabel icon={MessageSquare} text="Reviews" />} width={colWidths.reviews} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('city') && <ResizableHeader col="city" label={<HeaderLabel icon={MapPin} text="City" />} width={colWidths.city} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('niche') && <ResizableHeader col="niche" label={<HeaderLabel icon={Tag} text="Niche" />} width={colWidths.niche} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
+                        {customFields && customFields.map(cf => visibleColumns.has(cf.key) && (
+                            <ResizableHeader key={cf.id} col={cf.key} label={cf.name} width={colWidths[cf.key] || 150} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />
+                        ))}
                         {visibleColumns.has('notes') && <ResizableHeader col="notes" label={<HeaderLabel icon={FileText} text="Notes" />} width={colWidths.notes} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
 
                         {/* Add Column Button */}
@@ -170,6 +176,9 @@ export const LeadsTable = ({
                                 {visibleColumns.has('social') && <td>
                                     <input className="lt-input lt-text-muted" placeholder="Social Link" value={lead.social_media || ''} onChange={(e) => onUpdateLead(lead.id, 'social_media', e.target.value)} />
                                 </td>}
+                                {visibleColumns.has('email') && <td>
+                                    <input className="lt-input lt-text-muted" placeholder="Email" type="email" value={lead.email || ''} onChange={(e) => onUpdateLead(lead.id, 'email', e.target.value)} />
+                                </td>}
                                 {visibleColumns.has('website') && <td>
                                     <input className="lt-input lt-text-link" placeholder="Website" value={lead.website || ''} onChange={(e) => onUpdateLead(lead.id, 'website', e.target.value)} />
                                 </td>}
@@ -182,6 +191,15 @@ export const LeadsTable = ({
                                 {visibleColumns.has('niche') && <td className="lt-center">
                                     <span className="lt-tag">{lead.niche}</span>
                                 </td>}
+                                {customFields && customFields.map(cf => visibleColumns.has(cf.key) && (
+                                    <td key={cf.id}>
+                                        <input
+                                            className="lt-input"
+                                            value={lead.custom_data?.[cf.key] || ''}
+                                            onChange={(e) => onUpdateLead(lead.id, cf.key, e.target.value)}
+                                        />
+                                    </td>
+                                ))}
                                 {visibleColumns.has('notes') && <td className="lt-cell-notes" title={lead.notes || ''}>
                                     {lead.notes || <span className="lt-text-faint">Empty</span>}
                                 </td>}

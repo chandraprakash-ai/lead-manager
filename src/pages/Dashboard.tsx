@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchLeads } from '../api/leads';
-import { BarChart3, Users, CheckCircle, XCircle, ListFilter } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, ListFilter } from 'lucide-react';
 
 export default function Dashboard() {
     const { data: leads = [], isLoading } = useQuery({

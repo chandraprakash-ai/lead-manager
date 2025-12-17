@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchLeads, bulkUpdateLeads } from '../api/leads';
-import type { Lead, NicheCategory, DealStage } from '../types';
+import { fetchLeads, bulkUpdateLeads, fetchUniqueNiches, fetchUniqueCities } from '../api/leads';
+import { fetchCustomFields, createCustomField, deleteCustomField } from '../api/customFields';
+import type { Lead, DealStage, CustomField } from '../types';
 import ImportModal from '../components/ImportModal';
 import { supabase } from '../lib/supabaseClient';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -16,17 +17,69 @@ import './LeadsPage.css';
 export default function LeadsPage() {
     const [searchParams] = useSearchParams();
     const queryClient = useQueryClient();
-    const [localSearch, setLocalSearch] = useState('');
-    const [isImportOpen, setIsImportOpen] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-    // --- Write Strategy: Local Draft State + Auto-Save ---
+    // --- Data Fetching ---
+    const { data: allLeads = [], isLoading: isLeadsLoading, isRefetching, refetch } = useQuery({
+        queryKey: ['leads'],
+        queryFn: () => fetchLeads(),
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        refetchOnWindowFocus: false,
+    });
+
+    const { data: allNiches = [] } = useQuery({ queryKey: ['niches'], queryFn: fetchUniqueNiches });
+    const { data: allCities = [] } = useQuery({ queryKey: ['cities'], queryFn: fetchUniqueCities });
+    const { data: customFields = [] } = useQuery({ queryKey: ['customFields'], queryFn: fetchCustomFields });
+
+    // --- State ---
+    const [localSearch, setLocalSearch] = useState(searchParams.get('q') || '');
+    const [sortConfig, setSortConfig] = useState<{ field: keyof Lead; order: 'asc' | 'desc' } | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [isImportOpen, setIsImportOpen] = useState(false);
+
+    // Filters
+    const [activeStageFilter, setActiveStageFilter] = useState<DealStage | 'All'>('All');
+
+    // Multi-select Filters (Arrays)
+    const [activeNicheFilters, setActiveNicheFilters] = useState<string[]>(
+        searchParams.get('niche') ? [searchParams.get('niche')!] : []
+    );
+    const [activeCityFilters, setActiveCityFilters] = useState<string[]>(
+        searchParams.get('city') ? [searchParams.get('city')!] : []
+    );
+
+    // --- Sync State with URL ---
+    useEffect(() => {
+        const nicheParam = searchParams.get('niche');
+        const cityParam = searchParams.get('city');
+
+        setActiveNicheFilters(nicheParam ? [nicheParam] : []);
+        setActiveCityFilters(cityParam ? [cityParam] : []);
+    }, [searchParams]);
+
+    // --- Local Pending Updates ---
     const [pendingUpdates, setPendingUpdates] = useLocalStorage<Record<string, Partial<Lead>>>('leads_pending_updates', {});
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
     const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hasPendingChanges = Object.keys(pendingUpdates).length > 0;
 
-    // Helper to track local changes
-    const updateLocal = (id: string, field: keyof Lead, value: any) => {
+    const updateLocal = (id: string, field: keyof Lead | string, value: any) => {
+        // Handle custom fields
+        if (customFields.some(cf => cf.key === field)) {
+            setPendingUpdates((prev: Record<string, Partial<Lead>>) => {
+                const existing = prev[id] || {};
+                // We'll store it in custom_data object in pendingUpdates.
+                return {
+                    ...prev,
+                    [id]: {
+                        ...existing,
+                        custom_data: { ...(existing.custom_data || {}), [field as string]: value }
+                    }
+                };
+            });
+            setSaveStatus('unsaved');
+            return;
+        }
+
         setPendingUpdates((prev: Record<string, Partial<Lead>>) => ({
             ...prev,
             [id]: { ...prev[id], [field]: value }
@@ -34,34 +87,23 @@ export default function LeadsPage() {
         setSaveStatus('unsaved');
     };
 
-    const hasPendingChanges = Object.keys(pendingUpdates).length > 0;
-
     // Auto-Save Effect
     useEffect(() => {
         if (!hasPendingChanges) return;
-
         if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
 
         setSaveStatus('unsaved');
         autoSaveTimeout.current = setTimeout(() => {
             setSaveStatus('saving');
             saveMutation.mutate(pendingUpdates);
-        }, 2000); // 2 seconds debounce
+        }, 2000); // 2s debounce
 
         return () => {
             if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
         };
     }, [pendingUpdates, hasPendingChanges]);
 
-    // --- Read Strategy: Load Once ---
-    const { data: allLeads = [], isLoading, isRefetching, refetch } = useQuery({
-        queryKey: ['leads'],
-        queryFn: () => fetchLeads(), // Fetches all (or sensible default limit)
-        staleTime: Infinity, // Never stale automatically. User must explicit refresh.
-        refetchOnWindowFocus: false,
-    });
-
-    // --- Bulk Mutations ---
+    // --- Mutations ---
     const saveMutation = useMutation({
         mutationFn: async (updates: Record<string, Partial<Lead>>) => {
             const batch = Object.entries(updates).map(([id, changes]) => ({ id, changes }));
@@ -74,22 +116,24 @@ export default function LeadsPage() {
         }
     });
 
-    // const deleteMutation = useMutation({
-    //     mutationFn: deleteLead,
-    //     onMutate: async (id) => {
-    //         await queryClient.cancelQueries({ queryKey: ['leads'] });
-    //         const previousLeads = queryClient.getQueryData<Lead[]>(['leads']);
-    //         queryClient.setQueryData(['leads'], (old: Lead[] | undefined) => old ? old.filter(l => l.id !== id) : []);
-    //         return { previousLeads };
-    //     },
-    //     onError: (err, id, context) => {
-    //         queryClient.setQueryData(['leads'], context?.previousLeads);
-    //         alert('Failed to delete lead');
-    //     },
-    //     onSettled: () => {
-    //         queryClient.invalidateQueries({ queryKey: ['leads'] });
-    //     }
-    // });
+    // Create Custom Field Mutation
+    const createFieldMutation = useMutation({
+        mutationFn: async ({ name, type }: { name: string, type: CustomField['type'] }) => {
+            return createCustomField(name, type);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['customFields'] });
+        }
+    });
+
+    const deleteFieldMutation = useMutation({
+        mutationFn: async ({ id, key }: { id: string, key: string }) => {
+            return deleteCustomField(id, key);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['customFields'] });
+        }
+    });
 
     const bulkDeleteMutation = useMutation({
         mutationFn: async (ids: string[]) => {
@@ -102,23 +146,7 @@ export default function LeadsPage() {
         }
     });
 
-    // --- Client-Side Filtering & Sorting ---
-    const [sortConfig, setSortConfig] = useState<{ field: keyof Lead; order: 'asc' | 'desc' } | null>(null);
-
-    // Filters
-    const [activeStageFilter, setActiveStageFilter] = useState<DealStage | 'All'>('All');
-    const [activeNicheFilter, setActiveNicheFilter] = useState<NicheCategory | 'All'>((searchParams.get('niche') as NicheCategory) || 'All');
-    const [activeCityFilter, setActiveCityFilter] = useState<string | 'All'>((searchParams.get('city') as string) || 'All');
-
-    // Sync state with URL params when they change (e.g. Sidebar navigation)
-    useEffect(() => {
-        const nicheParam = searchParams.get('niche');
-        const cityParam = searchParams.get('city');
-
-        setActiveNicheFilter(nicheParam ? (nicheParam as NicheCategory) : 'All');
-        setActiveCityFilter(cityParam ? cityParam : 'All');
-    }, [searchParams]);
-
+    // --- Filtering & Sorting Logic ---
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
@@ -127,32 +155,46 @@ export default function LeadsPage() {
     // Reset page on filter change
     useEffect(() => {
         setCurrentPage(1);
-    }, [localSearch, activeStageFilter, activeNicheFilter, activeCityFilter]);
+    }, [localSearch, activeStageFilter, activeNicheFilters, activeCityFilters]);
 
     const filteredLeads = useMemo(() => {
         let result = [...(allLeads || [])];
 
-        // 1. Apply Drafts over Server Data (Optimistic View)
+        // 1. Optimistic Updates
         if (hasPendingChanges) {
-            result = result.map(l => pendingUpdates[l.id] ? { ...l, ...pendingUpdates[l.id] } : l);
+            result = result.map(l => {
+                const u = pendingUpdates[l.id];
+                if (!u) return l;
+                // Merge custom data specifically
+                const mergedCustom = { ...l.custom_data, ...u.custom_data };
+                return { ...l, ...u, custom_data: mergedCustom };
+            });
         }
 
         // 2. Filters
-        if (activeNicheFilter !== 'All') {
-            result = result.filter(l => l.niche === activeNicheFilter);
+        if (activeNicheFilters.length > 0) {
+            result = result.filter(l => l.niche && activeNicheFilters.includes(l.niche));
         }
 
-        if (activeCityFilter !== 'All') {
-            result = result.filter(l => l.city === activeCityFilter);
+        if (activeCityFilters.length > 0) {
+            result = result.filter(l => l.city && activeCityFilters.includes(l.city));
         }
 
         if (activeStageFilter !== 'All') {
             result = result.filter(l => l.deal_stage === activeStageFilter);
         }
 
+        // Search
         if (localSearch) {
             const q = localSearch.toLowerCase();
-            result = result.filter(l => l.business_name?.toLowerCase().includes(q) || l.city?.toLowerCase().includes(q));
+            result = result.filter(l =>
+                l.business_name.toLowerCase().includes(q) ||
+                l.city.toLowerCase().includes(q) ||
+                (l.email && l.email.toLowerCase().includes(q)) ||
+                l.niche.toLowerCase().includes(q) ||
+                (l.website && l.website.toLowerCase().includes(q)) ||
+                (l.phone && l.phone.toLowerCase().includes(q))
+            );
         }
 
         // 3. Sorting
@@ -160,11 +202,10 @@ export default function LeadsPage() {
             result.sort((a, b) => {
                 const aVal = a[sortConfig.field];
                 const bVal = b[sortConfig.field];
-                if (aVal === bVal) return 0;
 
-                // Handle nulls
-                if (aVal === null || aVal === undefined) return 1;
-                if (bVal === null || bVal === undefined) return -1;
+                if (aVal === bVal) return 0;
+                if (aVal == null) return 1;
+                if (bVal == null) return -1;
 
                 const comparison = aVal < bVal ? -1 : 1;
                 return sortConfig.order === 'asc' ? comparison : -comparison;
@@ -175,9 +216,9 @@ export default function LeadsPage() {
         }
 
         return result;
-    }, [allLeads, pendingUpdates, activeNicheFilter, activeStageFilter, localSearch, sortConfig]);
+    }, [allLeads, pendingUpdates, hasPendingChanges, activeNicheFilters, activeCityFilters, activeStageFilter, localSearch, sortConfig]);
 
-    // Pagination Logic
+    // Pagination View
     const paginatedLeads = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
         return filteredLeads.slice(start, start + itemsPerPage);
@@ -185,29 +226,34 @@ export default function LeadsPage() {
 
     const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
 
-    // --- Column & Sort Configuration ---
-    const allColumns: { id: string; label: string }[] = useMemo(() => [
-        { id: 'sn', label: '#' },
-        { id: 'business_name', label: 'Business Name' },
-        { id: 'priority', label: 'Priority' },
-        { id: 'deal_stage', label: 'Deal Status' },
-        { id: 'contacted', label: 'Contacted' },
-        { id: 'website_status', label: 'Web Status' },
-        { id: 'social', label: 'Social' },
-        { id: 'website', label: 'Website' },
-        { id: 'phone', label: 'Phone' },
-        { id: 'rating', label: 'Rating' },
-        { id: 'reviews', label: 'Reviews' },
-        { id: 'city', label: 'City' },
-        { id: 'niche', label: 'Niche' },
-        { id: 'notes', label: 'Notes' },
-    ], []);
+    // --- Columns ---
+    const allColumns: { id: string; label: string }[] = useMemo(() => {
+        const base = [
+            { id: 'sn', label: '#' },
+            { id: 'business_name', label: 'Business Name' },
+            { id: 'email', label: 'Email' },
+            { id: 'priority', label: 'Priority' },
+            { id: 'deal_stage', label: 'Deal Status' },
+            { id: 'contacted', label: 'Contacted' },
+            { id: 'website_status', label: 'Web Status' },
+            { id: 'social', label: 'Social' },
+            { id: 'website', label: 'Website' },
+            { id: 'phone', label: 'Phone' },
+            { id: 'rating', label: 'Rating' },
+            { id: 'reviews', label: 'Reviews' },
+            { id: 'city', label: 'City' },
+            { id: 'niche', label: 'Niche' },
+            { id: 'notes', label: 'Notes' },
+        ];
+        // Merge custom fields
+        const custom = customFields.map(cf => ({ id: cf.key, label: cf.name }));
+        return [...base, ...custom];
+    }, [customFields]);
 
     const [visibleColumnsList, setVisibleColumnsList] = useLocalStorage<string[]>('leads_visible_columns_v2',
         allColumns.map(c => c.id)
     );
 
-    // Safety check: ensure it is an array before creating Set
     const visibleColumns = useMemo(() => {
         if (Array.isArray(visibleColumnsList)) return new Set(visibleColumnsList);
         return new Set(allColumns.map(c => c.id));
@@ -220,7 +266,6 @@ export default function LeadsPage() {
         setVisibleColumnsList(Array.from(next));
     };
 
-
     const handleSort = (field: keyof Lead) => {
         setSortConfig(current => {
             if (current?.field === field) return { field, order: current.order === 'asc' ? 'desc' : 'asc' };
@@ -228,24 +273,29 @@ export default function LeadsPage() {
         });
     };
 
+    const getHeaderTitle = () => {
+        if (activeNicheFilters.length > 0) {
+            return `${activeNicheFilters.join(', ')} Leads`;
+        }
+        if (activeCityFilters.length > 0) {
+            return `${activeCityFilters.join(', ')} Leads`;
+        }
+        return 'All Leads';
+    };
 
-    if (isLoading) return <div className="p-4 text-center text-gray-500">Loading leads...</div>;
-
-    // ... (Hooks and State remain)
+    if (isLeadsLoading) return <div className="p-4 text-center text-gray-500">Loading leads...</div>;
 
     return (
         <div className="main-layout-container">
             <LeadsHeader
-                title={
-                    activeNicheFilter !== 'All' ? `${activeNicheFilter} Leads` :
-                        activeCityFilter !== 'All' ? `${activeCityFilter} Leads` :
-                            'All Leads'
-                }
+                title={getHeaderTitle()}
                 count={filteredLeads.length}
                 isSyncing={isRefetching}
                 saveStatus={saveStatus}
                 onSync={() => refetch()}
                 onImport={() => setIsImportOpen(true)}
+                hasPendingChanges={hasPendingChanges}
+                onSave={() => saveMutation.mutate(pendingUpdates)}
             />
 
             <main className="content-wrapper">
@@ -255,8 +305,15 @@ export default function LeadsPage() {
                         onSearchChange={setLocalSearch}
                         activeStage={activeStageFilter}
                         onStageChange={setActiveStageFilter}
-                        activeNiche={activeNicheFilter}
-                        onNicheChange={setActiveNicheFilter}
+
+                        activeNiches={activeNicheFilters}
+                        onNichesChange={setActiveNicheFilters}
+                        availableNiches={allNiches}
+
+                        activeCities={activeCityFilters}
+                        onCitiesChange={setActiveCityFilters}
+                        availableCities={allCities}
+
                         selectedCount={selectedIds.size}
                         onDeleteSelected={() => {
                             if (confirm(`Delete ${selectedIds.size} leads ? `)) bulkDeleteMutation.mutate(Array.from(selectedIds));
@@ -268,9 +325,9 @@ export default function LeadsPage() {
                         }}
                     />
 
-                    {/* Leads Table Module */}
                     <LeadsTable
                         leads={paginatedLeads}
+                        customFields={customFields}
                         visibleColumns={visibleColumns}
                         selectedIds={selectedIds}
                         onSelectionChange={setSelectedIds}
@@ -284,7 +341,6 @@ export default function LeadsPage() {
                         onOpenColumnManager={() => setShowColumnSelector(true)}
                     />
 
-                    {/* Pagination */}
                     <LeadsPagination
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -293,8 +349,8 @@ export default function LeadsPage() {
                         onPageChange={setCurrentPage}
                         onItemsPerPageChange={setItemsPerPage}
                     />
-                </div >
-            </main >
+                </div>
+            </main>
 
             <ImportModal
                 isOpen={isImportOpen}
@@ -310,8 +366,11 @@ export default function LeadsPage() {
                     visibleColumns={visibleColumns}
                     onToggleColumn={toggleColumn}
                     onClose={() => setShowColumnSelector(false)}
+                    onCreateField={(name: string, type: CustomField['type']) => createFieldMutation.mutate({ name, type })}
+                    onDeleteField={(id: string, key: string) => deleteFieldMutation.mutate({ id, key })}
+                    customFields={customFields}
                 />
             )}
-        </div >
+        </div>
     );
 }

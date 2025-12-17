@@ -1,4 +1,4 @@
-import { RefreshCw, CheckSquare, Trash2 } from 'lucide-react';
+import { RefreshCw, CheckSquare, Save } from 'lucide-react';
 import './LeadsHeader.css';
 
 interface LeadsHeaderProps {
@@ -6,13 +6,15 @@ interface LeadsHeaderProps {
     subtitle?: string;
     count: number;
     isSyncing: boolean;
-    saveStatus: 'saved' | 'saving' | 'unsaved';
+    saveStatus: 'saved' | 'saving' | 'unsaved' | 'error';
     onSync: () => void;
     onImport: () => void;
+    hasPendingChanges?: boolean;
+    onSave?: () => void;
 }
 
 export const LeadsHeader = ({
-    title, subtitle, count, isSyncing, saveStatus, onSync, onImport
+    title, subtitle, count, isSyncing, saveStatus, onSync, onImport, hasPendingChanges, onSave
 }: LeadsHeaderProps) => {
     return (
         <header className="page-header">
@@ -36,6 +38,11 @@ export const LeadsHeader = ({
                                 <CheckSquare size={10} /> Saved
                             </span>
                         )}
+                        {saveStatus === 'error' && (
+                            <span className="status-error" style={{ color: 'var(--red-600)' }}>
+                                ! Error
+                            </span>
+                        )}
                         {isSyncing && (
                             <span className="status-syncing">
                                 <RefreshCw size={10} className="spin" /> Syncing...
@@ -46,6 +53,16 @@ export const LeadsHeader = ({
             </div>
 
             <div className="header-actions">
+                {hasPendingChanges && onSave && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={onSave}
+                        style={{ backgroundColor: 'var(--amber-500)', borderColor: 'var(--amber-600)' }}
+                    >
+                        <Save size={14} />
+                        <span>Save Changes</span>
+                    </button>
+                )}
                 <button
                     className="btn btn-secondary"
                     onClick={onSync}

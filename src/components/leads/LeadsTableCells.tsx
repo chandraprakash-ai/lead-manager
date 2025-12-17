@@ -1,4 +1,3 @@
-import { Building2, AlertCircle, Layers, CheckSquare, Globe, Share2, Link, Phone, Star, MessageSquare, MapPin, Tag, FileText } from 'lucide-react';
 import type { PriorityLevel, DealStage, WebsiteStatus } from '../../types';
 
 // Labels
@@ -58,17 +57,18 @@ export const StageSelect = ({ value, onChange }: { value: DealStage, onChange: (
     );
 };
 
-export const WebsiteStatusSelect = ({ value, onChange }: { value: WebsiteStatus, onChange: (v: WebsiteStatus) => void }) => {
+export const WebsiteStatusSelect = ({ value, onChange }: { value: WebsiteStatus | null | undefined | string, onChange: (v: WebsiteStatus) => void }) => {
+    const safeValue = (value as WebsiteStatus) || 'no';
     const s = {
         'yes': { bg: 'var(--success-bg)', col: 'var(--success-text)' },
         'no': { bg: 'var(--gray-100)', col: 'var(--text-muted)' },
         'bad': { bg: 'var(--danger-bg)', col: 'var(--danger-text)' },
-    }[value] || { bg: 'transparent', col: 'inherit' };
+    }[safeValue] || { bg: 'transparent', col: 'inherit' };
 
     return (
         <select
             className="no-arrow tag w-full text-center cursor-pointer"
-            value={value}
+            value={safeValue}
             onChange={(e) => onChange(e.target.value as WebsiteStatus)}
             style={{ backgroundColor: s.bg, color: s.col }}
         >

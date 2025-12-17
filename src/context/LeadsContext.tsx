@@ -5,7 +5,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface LeadsContextType {
     leads: Lead[];
-    addLead: (leadData: Omit<Lead, 'id' | 'createdAt' | 'lastUpdated'>) => void;
+    addLead: (leadData: Omit<Lead, 'id' | 'created_at'>) => void;
     updateLead: (id: string, updates: Partial<Lead>) => void;
     deleteLead: (id: string) => void;
     importLeads: (newLeads: Lead[]) => void;
@@ -16,12 +16,11 @@ const LeadsContext = createContext<LeadsContextType | undefined>(undefined);
 export const LeadsProvider = ({ children }: { children: ReactNode }) => {
     const [leads, setLeads] = useLocalStorage<Lead[]>('leads', []);
 
-    const addLead = (leadData: Omit<Lead, 'id' | 'createdAt' | 'lastUpdated'>) => {
+    const addLead = (leadData: Omit<Lead, 'id' | 'created_at'>) => {
         const newLead: Lead = {
             ...leadData,
             id: uuidv4(),
-            createdAt: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
+            created_at: new Date().toISOString(),
         };
         setLeads((prev) => [newLead, ...prev]);
     };
@@ -30,7 +29,7 @@ export const LeadsProvider = ({ children }: { children: ReactNode }) => {
         setLeads((prev) =>
             prev.map((lead) =>
                 lead.id === id
-                    ? { ...lead, ...updates, lastUpdated: new Date().toISOString() }
+                    ? { ...lead, ...updates }
                     : lead
             )
         );

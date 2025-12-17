@@ -1,19 +1,13 @@
-import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MapPin, Briefcase, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
 import './MainLayout.css';
-import type { NicheCategory } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function MainLayout() {
     const location = useLocation();
     const [isCollapsed, setIsCollapsed] = useLocalStorage('sidebar_collapsed', false);
-
-    const niches: NicheCategory[] = ['Cafe', 'Gym', 'Clinic', 'Other'];
-    const cities = ['Vadodara', 'Ahmedabad', 'Jaipur', 'Mumbai'];
-
-    const [isOpenNiches, setIsOpenNiches] = useState(false);
-    const [isOpenCities, setIsOpenCities] = useState(false);
+    const [pinnedNiches] = useLocalStorage<string[]>('pinned_niches', []);
+    const [pinnedCities] = useLocalStorage<string[]>('pinned_cities', []);
 
     return (
         <div className="app-layout">
@@ -38,57 +32,49 @@ export default function MainLayout() {
                         <Users size={16} className="nav-icon" /> {!isCollapsed && "All Leads"}
                     </NavLink>
 
-                    {/* Niches Section */}
-                    <div className="nav-section">
-                        {!isCollapsed && (
-                            <button
-                                className="nav-section-header"
-                                onClick={() => setIsOpenNiches(!isOpenNiches)}
-                            >
-                                <span>Niches</span>
-                                {isOpenNiches ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                            </button>
-                        )}
-                        {(!isCollapsed ? isOpenNiches : false) && (
-                            <div className="nav-section-content">
-                                {niches.map(niche => (
-                                    <NavLink
-                                        key={niche}
-                                        to={`/leads?niche=${niche}`}
-                                        className={() => `nav-item-sub ${location.search.includes(niche) ? 'active' : ''}`}
-                                    >
-                                        <Briefcase size={14} /> {niche}
-                                    </NavLink>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <div className="my-2 border-t border-[var(--border-subtle)]"></div>
 
-                    {/* Cities Section */}
-                    <div className="nav-section">
-                        {!isCollapsed && (
-                            <button
-                                className="nav-section-header"
-                                onClick={() => setIsOpenCities(!isOpenCities)}
-                            >
-                                <span>Cities</span>
-                                {isOpenCities ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                            </button>
-                        )}
-                        {(!isCollapsed ? isOpenCities : false) && (
-                            <div className="nav-section-content">
-                                {cities.map(city => (
-                                    <NavLink
-                                        key={city}
-                                        to={`/leads?city=${city}`}
-                                        className={() => `nav-item-sub ${location.search.includes(city) ? 'active' : ''}`}
-                                    >
-                                        <MapPin size={14} /> {city}
-                                    </NavLink>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {/* Niches */}
+                    <NavLink to="/niches" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={isCollapsed ? "All Niches" : ""}>
+                        <Briefcase size={16} className="nav-icon" /> {!isCollapsed && "All Niches"}
+                    </NavLink>
+
+                    {!isCollapsed && pinnedNiches.length > 0 && (
+                        <div className="nav-section-content mt-1">
+                            {pinnedNiches.map(niche => (
+                                <NavLink
+                                    key={niche}
+                                    to={`/leads?niche=${encodeURIComponent(niche)}`}
+                                    className={() => `nav-item-sub ${location.search.includes(niche) ? 'active' : ''}`}
+                                    title={niche}
+                                >
+                                    <span className="truncate">{niche}</span>
+                                </NavLink>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="my-2 border-t border-[var(--border-subtle)]"></div>
+
+                    {/* Cities */}
+                    <NavLink to="/cities" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={isCollapsed ? "All Cities" : ""}>
+                        <MapPin size={16} className="nav-icon" /> {!isCollapsed && "All Cities"}
+                    </NavLink>
+
+                    {!isCollapsed && pinnedCities.length > 0 && (
+                        <div className="nav-section-content mt-1">
+                            {pinnedCities.map(city => (
+                                <NavLink
+                                    key={city}
+                                    to={`/leads?city=${encodeURIComponent(city)}`}
+                                    className={() => `nav-item-sub ${location.search.includes(city) ? 'active' : ''}`}
+                                    title={city}
+                                >
+                                    <span className="truncate">{city}</span>
+                                </NavLink>
+                            ))}
+                        </div>
+                    )}
                 </nav>
 
                 <div className="sidebar-footer">

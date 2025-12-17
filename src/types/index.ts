@@ -9,11 +9,16 @@ export interface Lead {
 
   // Business Info
   business_name: string;
+  contact_name?: string | null;
+  email?: string | null;
   niche: NicheCategory;
   city: string;
   website?: string | null;
-  website_status: WebsiteStatus;
+  website_status?: 'yes' | 'no' | 'bad' | null;
   social_media?: string | null;
+
+  // Custom Fields
+  custom_data?: Record<string, any>;
   phone?: string | null;
 
   // Metrics
@@ -37,4 +42,12 @@ export interface LeadFilter {
   contacted?: boolean;
   sortBy?: keyof Lead;
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface CustomField {
+  id: string; // uuid
+  key: string;
+  name: string;
+  type: 'text' | 'number' | 'date' | 'boolean' | 'url';
+  created_at: string;
 }

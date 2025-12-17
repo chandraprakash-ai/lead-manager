@@ -61,3 +61,18 @@ export const bulkUpdateLeads = async (updates: { id: string; changes: Partial<Le
 
     return results.map(r => r.data);
 };
+
+export const fetchUniqueNiches = async () => {
+    const { data, error } = await supabase.from('leads').select('niche');
+    if (error) throw error;
+    // Client-side unique because standard select doesn't distinct efficiently without RPC
+    const niches = Array.from(new Set(data.map(item => item.niche).filter(Boolean)));
+    return niches.sort();
+};
+
+export const fetchUniqueCities = async () => {
+    const { data, error } = await supabase.from('leads').select('city');
+    if (error) throw error;
+    const cities = Array.from(new Set(data.map(item => item.city).filter(Boolean)));
+    return cities.sort();
+};

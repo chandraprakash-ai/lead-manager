@@ -1,31 +1,50 @@
 import { useState } from 'react';
-import { Search, Layers, Tag, Trash2, ArrowUpDown } from 'lucide-react';
-import type { DealStage, NicheCategory, Lead } from '../../types';
+import { Search, Layers, Tag, Trash2, ArrowUpDown, X, ListFilter, MapPin } from 'lucide-react';
+import type { DealStage, Lead } from '../../types';
 import './LeadsToolbar.css';
 
 interface LeadsToolbarProps {
     searchValue: string;
     onSearchChange: (val: string) => void;
+
+    // Filters
     activeStage: DealStage | 'All';
     onStageChange: (val: DealStage | 'All') => void;
-    activeNiche: NicheCategory | 'All';
-    onNicheChange: (val: NicheCategory | 'All') => void;
+
+    // Multi-select Contexts
+    activeNiches: string[];
+    onNichesChange: (val: string[]) => void;
+    availableNiches: string[];
+
+    activeCities: string[];
+    onCitiesChange: (val: string[]) => void;
+    availableCities: string[];
+
     selectedCount: number;
     onDeleteSelected: () => void;
-
-    // Sorting
     currentSort: { field: keyof Lead; order: 'asc' | 'desc' } | null;
-    onSortChange: (field: keyof Lead | null) => void; // null for default
+    onSortChange: (field: keyof Lead | null) => void;
 }
 
 export const LeadsToolbar = ({
     searchValue, onSearchChange,
     activeStage, onStageChange,
-    activeNiche, onNicheChange,
+    activeNiches, onNichesChange, availableNiches,
+    activeCities, onCitiesChange, availableCities,
     selectedCount, onDeleteSelected,
     currentSort, onSortChange
 }: LeadsToolbarProps) => {
     const [showSortMenu, setShowSortMenu] = useState(false);
+    const [showFilterMenu, setShowFilterMenu] = useState(false);
+
+    // Helper to toggle item in array
+    const toggleItem = (current: string[], item: string, onChange: (v: string[]) => void) => {
+        if (current.includes(item)) {
+            onChange(current.filter(i => i !== item));
+        } else {
+            onChange([...current, item]);
+        }
+    };
 
     return (
         <div className="leads-toolbar">
@@ -44,7 +63,7 @@ export const LeadsToolbar = ({
 
                 <div className="divider-vertical"></div>
 
-                {/* Stage Filter */}
+                {/* Stage Filter - Always visible as Primary View */}
                 <div className="filter-wrapper">
                     <Layers size={14} className="filter-icon" />
                     <select
@@ -62,20 +81,100 @@ export const LeadsToolbar = ({
                     </select>
                 </div>
 
-                {/* Niche Filter */}
-                <div className="filter-wrapper">
-                    <Tag size={14} className="filter-icon" />
-                    <select
-                        className="filter-select"
-                        value={activeNiche}
-                        onChange={(e) => onNicheChange(e.target.value as NicheCategory | 'All')}
+                {/* Unified Filter Menu */}
+                <div className="relative">
+                    <button
+                        className={`ltoolbar-btn ${showFilterMenu ? 'active' : ''}`}
+                        onClick={() => setShowFilterMenu(!showFilterMenu)}
                     >
-                        <option value="All">All Tags</option>
-                        <option value="Cafe">Cafe</option>
-                        <option value="Gym">Gym</option>
-                        <option value="Clinic">Clinic</option>
-                        <option value="Other">Other</option>
-                    </select>
+                        <ListFilter size={14} /> Filters
+                        {(activeNiches.length + activeCities.length) > 0 && (
+                            <span className="badge-count">{activeNiches.length + activeCities.length}</span>
+                        )}
+                    </button>
+
+                    {showFilterMenu && (
+                        <>
+                            <div className="ltoolbar-menu-overlay" onClick={() => setShowFilterMenu(false)}></div>
+                            <div className="ltoolbar-menu ltoolbar-filters-menu">
+                                {/* Niches Section */}
+                                <div className="filter-section">
+                                    <div className="filter-section-header">
+                                        <Tag size={12} /> Niches
+                                    </div>
+                                    <div className="filter-options-grid">
+                                        {availableNiches.map(niche => (
+                                            <label key={niche} className="filter-option-item">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={activeNiches.includes(niche)}
+                                                    onChange={() => toggleItem(activeNiches, niche, onNichesChange)}
+                                                />
+                                                <span>{niche}</span>
+                                            </label>
+                                        ))}
+                                        {availableNiches.length === 0 && <span className="text-muted text-xs p-2">No niches found</span>}
+                                    </div>
+                                </div>
+
+                                <div className="menu-divider"></div>
+
+                                {/* Cities Section */}
+                                <div className="filter-section">
+                                    <div className="filter-section-header">
+                                        <MapPin size={12} /> Cities
+                                    </div>
+                                    <div className="filter-options-grid">
+                                        {availableCities.map(city => (
+                                            <label key={city} className="filter-option-item">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={activeCities.includes(city)}
+                                                    onChange={() => toggleItem(activeCities, city, onCitiesChange)}
+                                                />
+                                                <span>{city}</span>
+                                            </label>
+                                        ))}
+                                        {availableCities.length === 0 && <span className="text-muted text-xs p-2">No cities found</span>}
+                                    </div>
+                                </div>
+
+                                <div className="menu-footer">
+                                    <button
+                                        className="ltoolbar-clear-btn"
+                                        onClick={() => {
+                                            onNichesChange([]);
+                                            onCitiesChange([]);
+                                        }}
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* Active Tags Display (Removable) */}
+                <div className="active-tags-list">
+                    {activeNiches.map(niche => (
+                        <div key={niche} className="filter-tag">
+                            <Tag size={10} className="opacity-50" />
+                            <span>{niche}</span>
+                            <button onClick={() => toggleItem(activeNiches, niche, onNichesChange)} className="remove-tag">
+                                <X size={10} />
+                            </button>
+                        </div>
+                    ))}
+                    {activeCities.map(city => (
+                        <div key={city} className="filter-tag">
+                            <MapPin size={10} className="opacity-50" />
+                            <span>{city}</span>
+                            <button onClick={() => toggleItem(activeCities, city, onCitiesChange)} className="remove-tag">
+                                <X size={10} />
+                            </button>
+                        </div>
+                    ))}
                 </div>
 
                 <div className="divider-vertical"></div>

@@ -4,15 +4,23 @@ import { queryClient } from './lib/queryClient';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import LeadsPage from './pages/LeadsPage';
+import NichesPage from './pages/NichesPage';
+import CitiesPage from './pages/CitiesPage';
+
+import AuthLayout from './layouts/AuthLayout';
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="leads" element={<LeadsPage />} />
+          <Route element={<AuthLayout />}>
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="leads" element={<LeadsPage />} />
+              <Route path="niches" element={<NichesPage />} />
+              <Route path="cities" element={<CitiesPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

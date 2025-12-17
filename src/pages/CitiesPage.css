@@ -1,0 +1,101 @@
+/* Reuse similar structure to NichesPage */
+.page-container {
+    padding: 32px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-title svg {
+    color: var(--primary-600);
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
+}
+
+@media (min-width: 640px) {
+    .items-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    .items-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .items-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.item-card {
+    background: var(--bg-surface);
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.item-card:hover {
+    border-color: var(--primary-300);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.item-name {
+    font-weight: 500;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 16px;
+}
+
+.btn-pin {
+    padding: 6px;
+    border-radius: 9999px;
+    transition: background-color 0.2s;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.btn-pin:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-main);
+}
+
+.btn-pin.pinned {
+    color: var(--primary-600);
+    background-color: var(--primary-50);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 32px;
+}
