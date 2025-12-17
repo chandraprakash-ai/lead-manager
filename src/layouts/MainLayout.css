@@ -140,3 +140,10 @@
     position: relative;
     /* Isolate stacking context */
 }
+.mapper {
+    padding: 20px;
+}
+.
+.modal{
+    background-color: antiquewhite;
+}

@@ -158,7 +158,8 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Import Leads" maxWidth="600px">
+        <Modal isOpen={isOpen} onClose={onClose} title="Import Leads" maxWidth="600px" background-color="white">
+            <div>
             {step === 'upload' && (
                 <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed var(--border-default)', borderRadius: '8px', background: 'var(--gray-50)' }}>
                     <div style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>
@@ -180,12 +181,12 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
             )}
 
             {step === 'map' && (
-                <div>
+                <div >
                     <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
                         Map your file columns to the database fields.
                     </p>
 
-                    <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px', paddingRight: '4px' }}>
+                    <div  style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px', paddingRight: '4px' }}>
                         {headers.map(header => (
                             <div key={header} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                                 <div style={{ flex: 1, fontSize: '13px', fontWeight: 500, color: 'var(--text-main)' }}>{header}</div>
@@ -231,6 +232,7 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
                     {error && <div style={{ marginTop: '16px', color: 'var(--danger-text)', fontSize: '13px' }}>{error}</div>}
                 </div>
             )}
+            </div> 
         </Modal>
     );
 }

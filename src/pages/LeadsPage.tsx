@@ -2,14 +2,15 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchLeads, deleteLead, bulkUpdateLeads } from '../api/leads';
+import { fetchLeads, bulkUpdateLeads } from '../api/leads';
 import type { Lead, NicheCategory, DealStage } from '../types';
-import { Trash2, Building2, AlertCircle, Layers, CheckSquare, Globe, Share2, Link, Phone, Star, MessageSquare, MapPin, Tag, FileText } from 'lucide-react';
+import { Building2, AlertCircle, Layers, CheckSquare, Globe, Share2, Link, Phone, Star, MessageSquare, MapPin, Tag, FileText, Plus, Check } from 'lucide-react';
 import ImportModal from '../components/ImportModal';
 import { supabase } from '../lib/supabaseClient';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { LeadsHeader } from '../components/leads/LeadsHeader';
 import { LeadsToolbar } from '../components/leads/LeadsToolbar';
+import { ColumnManager } from '../components/leads/ColumnManager';
 import { HeaderLabel, PrioritySelect, StageSelect, WebsiteStatusSelect } from '../components/leads/LeadsTableCells';
 import { LeadsPagination } from '../components/leads/LeadsPagination';
 import './LeadsPage.css';
@@ -100,10 +101,22 @@ export default function LeadsPage() {
         }
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: (id: string) => deleteLead(id),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads'] })
-    });
+    // const deleteMutation = useMutation({
+    //     mutationFn: deleteLead,
+    //     onMutate: async (id) => {
+    //         await queryClient.cancelQueries({ queryKey: ['leads'] });
+    //         const previousLeads = queryClient.getQueryData<Lead[]>(['leads']);
+    //         queryClient.setQueryData(['leads'], (old: Lead[] | undefined) => old ? old.filter(l => l.id !== id) : []);
+    //         return { previousLeads };
+    //     },
+    //     onError: (err, id, context) => {
+    //         queryClient.setQueryData(['leads'], context?.previousLeads);
+    //         alert('Failed to delete lead');
+    //     },
+    //     onSettled: () => {
+    //         queryClient.invalidateQueries({ queryKey: ['leads'] });
+    //     }
+    // });
 
     const bulkDeleteMutation = useMutation({
         mutationFn: async (ids: string[]) => {
@@ -129,6 +142,7 @@ export default function LeadsPage() {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
+    const [showColumnSelector, setShowColumnSelector] = useState(false);
 
     // Reset page on filter change
     useEffect(() => {
@@ -186,6 +200,41 @@ export default function LeadsPage() {
     }, [filteredLeads, currentPage, itemsPerPage]);
 
     const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+
+    // --- Column & Sort Configuration ---
+    const allColumns: { id: string; label: string }[] = useMemo(() => [
+        { id: 'sn', label: '#' },
+        { id: 'business_name', label: 'Business Name' },
+        { id: 'priority', label: 'Priority' },
+        { id: 'deal_stage', label: 'Deal Status' },
+        { id: 'contacted', label: 'Contacted' },
+        { id: 'website_status', label: 'Web Status' },
+        { id: 'social', label: 'Social' },
+        { id: 'website', label: 'Website' },
+        { id: 'phone', label: 'Phone' },
+        { id: 'rating', label: 'Rating' },
+        { id: 'reviews', label: 'Reviews' },
+        { id: 'city', label: 'City' },
+        { id: 'niche', label: 'Niche' },
+        { id: 'notes', label: 'Notes' },
+    ], []);
+
+    const [visibleColumnsList, setVisibleColumnsList] = useLocalStorage<string[]>('leads_visible_columns_v2',
+        allColumns.map(c => c.id)
+    );
+
+    // Safety check: ensure it is an array before creating Set
+    const visibleColumns = useMemo(() => {
+        if (Array.isArray(visibleColumnsList)) return new Set(visibleColumnsList);
+        return new Set(allColumns.map(c => c.id));
+    }, [visibleColumnsList, allColumns]);
+
+    const toggleColumn = (id: string) => {
+        const next = new Set(visibleColumns);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setVisibleColumnsList(Array.from(next));
+    };
 
     // Resizing Logic (Visual only, no DB interaction)
     const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
@@ -301,6 +350,11 @@ export default function LeadsPage() {
                         onDeleteSelected={() => {
                             if (confirm(`Delete ${selectedIds.size} leads ? `)) bulkDeleteMutation.mutate(Array.from(selectedIds));
                         }}
+                        currentSort={sortConfig}
+                        onSortChange={(field) => {
+                            if (field === null) setSortConfig(null);
+                            else handleSort(field);
+                        }}
                     />
 
                     {/* Table Container */}
@@ -311,92 +365,98 @@ export default function LeadsPage() {
                                     <th style={{ width: colWidths.checkbox }}>
                                         <input type="checkbox" checked={paginatedLeads.length > 0 && selectedIds.size === paginatedLeads.length} onChange={toggleSelectAll} />
                                     </th>
-                                    <ResizableHeader col="sn" label="#" width={colWidths.sn} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="business_name" label={<HeaderLabel icon={Building2} text="Business Name" />} width={colWidths.business_name} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="priority" label={<HeaderLabel icon={AlertCircle} text="Priority" />} width={colWidths.priority} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="deal_stage" label={<HeaderLabel icon={Layers} text="Deal Status" />} width={colWidths.deal_stage} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="contacted" label={<HeaderLabel icon={CheckSquare} text="Contacted" />} width={colWidths.contacted} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="website_status" label={<HeaderLabel icon={Globe} text="Web Status" />} width={colWidths.website_status} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="social" label={<HeaderLabel icon={Share2} text="Social" />} width={colWidths.social} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="website" label={<HeaderLabel icon={Link} text="Website" />} width={colWidths.website} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="phone" label={<HeaderLabel icon={Phone} text="Phone" />} width={colWidths.phone} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="rating" label={<HeaderLabel icon={Star} text="Rating" />} width={colWidths.rating} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="reviews" label={<HeaderLabel icon={MessageSquare} text="Reviews" />} width={colWidths.reviews} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="city" label={<HeaderLabel icon={MapPin} text="City" />} width={colWidths.city} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="niche" label={<HeaderLabel icon={Tag} text="Niche" />} width={colWidths.niche} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <ResizableHeader col="notes" label={<HeaderLabel icon={FileText} text="Notes" />} width={colWidths.notes} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />
-                                    <th style={{ width: colWidths.actions, borderRight: 'none', background: 'var(--bg-surface)' }}></th>
+                                    {visibleColumns.has('sn') && <ResizableHeader col="sn" label="#" width={colWidths.sn} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('business_name') && <ResizableHeader col="business_name" label={<HeaderLabel icon={Building2} text="Business Name" />} width={colWidths.business_name} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('priority') && <ResizableHeader col="priority" label={<HeaderLabel icon={AlertCircle} text="Priority" />} width={colWidths.priority} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('deal_stage') && <ResizableHeader col="deal_stage" label={<HeaderLabel icon={Layers} text="Deal Status" />} width={colWidths.deal_stage} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('contacted') && <ResizableHeader col="contacted" label={<HeaderLabel icon={CheckSquare} text="Contacted" />} width={colWidths.contacted} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('website_status') && <ResizableHeader col="website_status" label={<HeaderLabel icon={Globe} text="Web Status" />} width={colWidths.website_status} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('social') && <ResizableHeader col="social" label={<HeaderLabel icon={Share2} text="Social" />} width={colWidths.social} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('website') && <ResizableHeader col="website" label={<HeaderLabel icon={Link} text="Website" />} width={colWidths.website} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('phone') && <ResizableHeader col="phone" label={<HeaderLabel icon={Phone} text="Phone" />} width={colWidths.phone} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('rating') && <ResizableHeader col="rating" label={<HeaderLabel icon={Star} text="Rating" />} width={colWidths.rating} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('reviews') && <ResizableHeader col="reviews" label={<HeaderLabel icon={MessageSquare} text="Reviews" />} width={colWidths.reviews} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('city') && <ResizableHeader col="city" label={<HeaderLabel icon={MapPin} text="City" />} width={colWidths.city} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('niche') && <ResizableHeader col="niche" label={<HeaderLabel icon={Tag} text="Niche" />} width={colWidths.niche} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+                                    {visibleColumns.has('notes') && <ResizableHeader col="notes" label={<HeaderLabel icon={FileText} text="Notes" />} width={colWidths.notes} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
+
+                                    {/* Add Column Button */}
+                                    <th className="relative" style={{ width: '40px', padding: 0, borderRight: 'none', background: 'var(--bg-surface)' }}>
+                                        <button
+                                            className="w-full h-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
+                                            onClick={() => setShowColumnSelector(true)}
+                                            title="Manage Columns"
+                                        >
+                                            <Plus size={18} />
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginatedLeads.map((lead, index) => {
                                     const isDirty = !!pendingUpdates[lead.id];
                                     return (
-                                        <tr key={lead.id} style={isDirty ? { backgroundColor: 'var(--warning-bg)' } : undefined}>
+                                        <tr key={lead.id} className={isDirty ? 'bg-amber-50' : ''}>
                                             <td>
                                                 <input type="checkbox" checked={selectedIds.has(lead.id)} onChange={() => toggleSelect(lead.id)} />
                                             </td>
-                                            <td><span style={{ color: 'var(--text-muted)' }}>#{index + 1 + ((currentPage - 1) * itemsPerPage)}</span></td>
-                                            <td style={{ fontWeight: 500 }}>
+                                            {visibleColumns.has('sn') && <td><span className="text-[var(--text-muted)]">#{index + 1 + ((currentPage - 1) * itemsPerPage)}</span></td>}
+                                            {visibleColumns.has('business_name') && <td style={{ fontWeight: 500 }}>
                                                 <input
                                                     className="input-cell font-medium"
                                                     value={lead.business_name}
                                                     onChange={(e) => updateLocal(lead.id, 'business_name', e.target.value)}
                                                 />
-                                            </td>
-                                            <td>
+                                            </td>}
+                                            {visibleColumns.has('priority') && <td>
                                                 <PrioritySelect value={lead.priority} onChange={(val) => updateLocal(lead.id, 'priority', val)} />
-                                            </td>
-                                            <td>
+                                            </td>}
+                                            {visibleColumns.has('deal_stage') && <td>
                                                 <StageSelect value={lead.deal_stage} onChange={(val) => updateLocal(lead.id, 'deal_stage', val)} />
-                                            </td>
-                                            <td className="text-center" style={{ textAlign: 'center' }}>
+                                            </td>}
+                                            {visibleColumns.has('contacted') && <td className="text-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={lead.contacted}
                                                     onChange={(e) => updateLocal(lead.id, 'contacted', e.target.checked)}
                                                     style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-500)' }}
                                                 />
-                                            </td>
-                                            <td>
+                                            </td>}
+                                            {visibleColumns.has('website_status') && <td>
                                                 <WebsiteStatusSelect value={lead.website_status} onChange={(val) => updateLocal(lead.id, 'website_status', val)} />
-                                            </td>
-                                            <td>
-                                                <input className="input-cell" style={{ color: 'var(--text-muted)' }} placeholder="Social Link" value={lead.social_media || ''} onChange={(e) => updateLocal(lead.id, 'social_media', e.target.value)} />
-                                            </td>
-                                            <td>
-                                                <input className="input-cell" style={{ color: 'var(--primary-600)', textDecoration: 'underline' }} placeholder="Website" value={lead.website || ''} onChange={(e) => updateLocal(lead.id, 'website', e.target.value)} />
-                                            </td>
-                                            <td>
-                                                <input className="input-cell" style={{ color: 'var(--text-main)' }} placeholder="Phone" value={lead.phone || ''} onChange={(e) => updateLocal(lead.id, 'phone', e.target.value)} />
-                                            </td>
-                                            <td><span style={{ color: (lead.rating || 0) > 4 ? "var(--warning-text)" : "var(--text-muted)", fontWeight: 500 }}>{lead.rating || '-'}</span></td>
-                                            <td><span style={{ color: 'var(--text-muted)' }}>{lead.reviews || 0}</span></td>
-                                            <td><span style={{ color: 'var(--text-main)' }}>{lead.city}</span></td>
-                                            {/* Centered Tag */}
-                                            <td style={{ textAlign: 'center' }}>
+                                            </td>}
+                                            {visibleColumns.has('social') && <td>
+                                                <input className="input-cell text-gray-500" placeholder="Social Link" value={lead.social_media || ''} onChange={(e) => updateLocal(lead.id, 'social_media', e.target.value)} />
+                                            </td>}
+                                            {visibleColumns.has('website') && <td>
+                                                <input className="input-cell text-blue-600 hover:underline" placeholder="Website" value={lead.website || ''} onChange={(e) => updateLocal(lead.id, 'website', e.target.value)} />
+                                            </td>}
+                                            {visibleColumns.has('phone') && <td>
+                                                <input className="input-cell text-gray-600" placeholder="Phone" value={lead.phone || ''} onChange={(e) => updateLocal(lead.id, 'phone', e.target.value)} />
+                                            </td>}
+                                            {visibleColumns.has('rating') && <td><span className={(lead.rating || 0) > 4 ? "text-amber-600 font-medium" : "text-gray-500"}>{lead.rating || '-'}</span></td>}
+                                            {visibleColumns.has('reviews') && <td><span className="text-gray-500">{lead.reviews || 0}</span></td>}
+                                            {visibleColumns.has('city') && <td><span className="text-gray-700">{lead.city}</span></td>}
+                                            {visibleColumns.has('niche') && <td style={{ textAlign: 'center' }}>
                                                 <span className="tag" style={{ border: '1px solid var(--border-default)', background: 'var(--gray-100)', color: 'var(--text-muted)' }}>{lead.niche}</span>
-                                            </td>
-                                            <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={lead.notes || ''}>
-                                                {lead.notes || <span style={{ color: 'var(--text-faint)', fontStyle: 'italic' }}>Empty</span>}
-                                            </td>
-                                            <td>
-                                                <button onClick={() => { if (confirm('Delete?')) deleteMutation.mutate(lead.id); }} style={{ color: 'var(--text-faint)', padding: '4px' }}>
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </td>
+                                            </td>}
+                                            {visibleColumns.has('notes') && <td className="max-w-[200px] truncate" title={lead.notes || ''}>
+                                                {lead.notes || <span className="text-[var(--text-faint)] italic">Empty</span>}
+                                            </td>}
+                                            {/* Delete Action Removed */}
                                         </tr>
                                     );
                                 })}
                                 {filteredLeads.length === 0 && (
                                     <tr>
-                                        <td colSpan={Object.keys(colWidths).length} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                                        <td colSpan={visibleColumns.size + 1} className="text-center p-8 text-[var(--text-muted)]">
                                             No leads match your filter.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
+
                     </div>
 
                     {/* Pagination */}
@@ -408,8 +468,8 @@ export default function LeadsPage() {
                         onPageChange={setCurrentPage}
                         onItemsPerPageChange={setItemsPerPage}
                     />
-                </div>
-            </main>
+                </div >
+            </main >
 
             <ImportModal
                 isOpen={isImportOpen}
@@ -419,6 +479,14 @@ export default function LeadsPage() {
                     setIsImportOpen(false);
                 }}
             />
-        </div>
+            {showColumnSelector && (
+                <ColumnManager
+                    allColumns={allColumns}
+                    visibleColumns={visibleColumns}
+                    onToggleColumn={toggleColumn}
+                    onClose={() => setShowColumnSelector(false)}
+                />
+            )}
+        </div >
     );
 }
