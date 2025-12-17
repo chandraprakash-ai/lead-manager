@@ -1,4 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import './LeadsPagination.css';
+
 
 interface LeadsPaginationProps {
     currentPage: number;
@@ -40,7 +42,7 @@ export const LeadsPagination = ({
             <div className="pagination-info">
                 <span>Showing <strong>{Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}</strong> to <strong>{Math.min(currentPage * itemsPerPage, totalItems)}</strong> of <strong>{totalItems}</strong> entries</span>
                 <select
-                    className="ml-4 p-1 border rounded text-xs bg-transparent"
+                    className="pagination-select"
                     value={itemsPerPage}
                     onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
                 >

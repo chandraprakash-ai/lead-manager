@@ -1,52 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import './styles/design-system.css';
 
+/* Compatibility Layer for Old Variables (to be removed after full refactor) */
 :root {
-  /* --- Design System Tokens --- */
-
-  /* Neutral Scale (Slate-ish Grays) */
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-muted);
+  --bg-primary: var(--bg-surface);
+  --bg-secondary: var(--bg-app);
+  /* Mapping for --gray-0 mentioned in instructions, assuming it maps to white */
   --gray-0: #ffffff;
-  --gray-50: #f8fafc;
-  --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
-  --gray-300: #cbd5e1;
-  --gray-400: #94a3b8;
-  --gray-500: #64748b;
-  --gray-600: #475569;
-  --gray-700: #334155;
-  --gray-800: #1e293b;
-  --gray-900: #0f172a;
-
-  /* Brand Colors */
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-200: #bfdbfe;
-  --primary-500: #3b82f6;
-  /* Electric Blue */
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
-
-  /* Semantic State Colors (Pastel Backgrounds / Strong Text) */
-  --success-bg: #dcfce7;
-  --success-text: #15803d;
-  --warning-bg: #fef9c3;
-  --warning-text: #a16207;
-  --danger-bg: #fee2e2;
-  --danger-text: #b91c1c;
-  --info-bg: #e0f2fe;
-  --info-text: #0369a1;
-
-  /* Component Mappings */
-  --bg-app: var(--gray-50);
-  /* App background */
-  --bg-surface: var(--gray-0);
-  /* Card/Table background */
-  --bg-hover: var(--gray-50);
-  /* Hover state */
-  --bg-active: var(--gray-100);
-  /* Active/Pressed state */
-
-  --text-main: var(--gray-900);
-  --text-muted: var(--gray-500);
   --text-faint: var(--gray-400);
 
   --border-subtle: var(--gray-100);

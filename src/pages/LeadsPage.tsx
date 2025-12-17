@@ -1,44 +1,17 @@
-
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchLeads, bulkUpdateLeads } from '../api/leads';
 import type { Lead, NicheCategory, DealStage } from '../types';
-import { Building2, AlertCircle, Layers, CheckSquare, Globe, Share2, Link, Phone, Star, MessageSquare, MapPin, Tag, FileText, Plus, Check } from 'lucide-react';
 import ImportModal from '../components/ImportModal';
 import { supabase } from '../lib/supabaseClient';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { LeadsHeader } from '../components/leads/LeadsHeader';
 import { LeadsToolbar } from '../components/leads/LeadsToolbar';
+import { LeadsHeader } from '../components/leads/LeadsHeader';
 import { ColumnManager } from '../components/leads/ColumnManager';
-import { HeaderLabel, PrioritySelect, StageSelect, WebsiteStatusSelect } from '../components/leads/LeadsTableCells';
 import { LeadsPagination } from '../components/leads/LeadsPagination';
+import { LeadsTable } from '../components/leads/LeadsTable/LeadsTable';
 import './LeadsPage.css';
-
-// --- Sub-Components defined outside to prevent re-creation ---
-
-const ResizableHeader = ({ col, label, width, sortConfig, onSort, onResizeStart }: {
-    col: string,
-    label: React.ReactNode,
-    width: number,
-    sortConfig: { field: keyof Lead; order: 'asc' | 'desc' } | null,
-    onSort: (field: keyof Lead) => void,
-    onResizeStart: (e: React.MouseEvent, col: string) => void
-}) => (
-    <th
-        className="resizable-th transition-colors cursor-pointer group"
-        style={{ width: width, minWidth: width }}
-        onClick={(e) => { e.preventDefault(); onSort(col as keyof Lead); }}
-    >
-        <div className="flex-align-center h-full justify-between gap-2">
-            <span className="font-medium flex-align-center gap-small group-hover-text-dark transition-colors">{label}</span>
-            {sortConfig?.field === col && (
-                <span className="text-gray-400 text-xs">{sortConfig.order === 'asc' ? '↑' : '↓'}</span>
-            )}
-        </div>
-        <div className="resizer" onMouseDown={(e) => onResizeStart(e, col)} onClick={(e) => e.stopPropagation()} />
-    </th>
-);
 
 export default function LeadsPage() {
     const [searchParams] = useSearchParams();
@@ -133,11 +106,18 @@ export default function LeadsPage() {
     const [sortConfig, setSortConfig] = useState<{ field: keyof Lead; order: 'asc' | 'desc' } | null>(null);
 
     // Filters
-    // Sync initial state with URL if present, else default
     const [activeStageFilter, setActiveStageFilter] = useState<DealStage | 'All'>('All');
-
-    // We can initialize niche from URL, but keep local control primary for the UI
     const [activeNicheFilter, setActiveNicheFilter] = useState<NicheCategory | 'All'>((searchParams.get('niche') as NicheCategory) || 'All');
+    const [activeCityFilter, setActiveCityFilter] = useState<string | 'All'>((searchParams.get('city') as string) || 'All');
+
+    // Sync state with URL params when they change (e.g. Sidebar navigation)
+    useEffect(() => {
+        const nicheParam = searchParams.get('niche');
+        const cityParam = searchParams.get('city');
+
+        setActiveNicheFilter(nicheParam ? (nicheParam as NicheCategory) : 'All');
+        setActiveCityFilter(cityParam ? cityParam : 'All');
+    }, [searchParams]);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -147,7 +127,7 @@ export default function LeadsPage() {
     // Reset page on filter change
     useEffect(() => {
         setCurrentPage(1);
-    }, [localSearch, activeStageFilter, activeNicheFilter]);
+    }, [localSearch, activeStageFilter, activeNicheFilter, activeCityFilter]);
 
     const filteredLeads = useMemo(() => {
         let result = [...(allLeads || [])];
@@ -160,6 +140,10 @@ export default function LeadsPage() {
         // 2. Filters
         if (activeNicheFilter !== 'All') {
             result = result.filter(l => l.niche === activeNicheFilter);
+        }
+
+        if (activeCityFilter !== 'All') {
+            result = result.filter(l => l.city === activeCityFilter);
         }
 
         if (activeStageFilter !== 'All') {
@@ -236,84 +220,6 @@ export default function LeadsPage() {
         setVisibleColumnsList(Array.from(next));
     };
 
-    // Resizing Logic (Visual only, no DB interaction)
-    const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
-        try {
-            const saved = window.localStorage.getItem('leads_table_col_widths');
-            const defaults = {
-                checkbox: 40, sn: 50, business_name: 200, priority: 100, deal_stage: 120, contacted: 100,
-                website_status: 100, social: 150, website: 150, phone: 120, rating: 80, reviews: 80,
-                city: 120, niche: 100, notes: 200, actions: 60
-            };
-            return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
-        } catch (e) {
-            return {
-                checkbox: 40, sn: 50, business_name: 200, priority: 100, deal_stage: 120, contacted: 100,
-                website_status: 100, social: 150, website: 150, phone: 120, rating: 80, reviews: 80,
-                city: 120, niche: 100, notes: 200, actions: 60
-            };
-        }
-    });
-
-    // Debounced save to localStorage
-    const saveColWidthsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const saveColWidths = useCallback((widths: Record<string, number>) => {
-        if (saveColWidthsTimeout.current) clearTimeout(saveColWidthsTimeout.current);
-        saveColWidthsTimeout.current = setTimeout(() => {
-            window.localStorage.setItem('leads_table_col_widths', JSON.stringify(widths));
-        }, 500);
-    }, []);
-
-    const activeResize = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
-
-    const startResize = (e: React.MouseEvent, col: string) => {
-        e.preventDefault(); e.stopPropagation();
-        const currentWidth = colWidths[col] || 100; // Fallback to avoid crashes
-        activeResize.current = { col, startX: e.clientX, startWidth: currentWidth };
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none'; // Prevent selection
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-        const th = (e.target as HTMLElement).closest('th');
-        if (th) th.classList.add('resizing');
-    };
-
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!activeResize.current) return;
-        const diff = e.clientX - activeResize.current.startX;
-        const newWidth = Math.max(50, activeResize.current.startWidth + diff);
-
-        // Use requestAnimationFrame to smooth updates and avoid thrashing
-        requestAnimationFrame(() => {
-            setColWidths(prev => {
-                const updated = { ...prev, [activeResize.current!.col]: newWidth };
-                saveColWidths(updated); // Schedule save
-                return updated;
-            });
-        });
-    }, [saveColWidths]);
-
-    const handleMouseUp = useCallback(() => {
-        activeResize.current = null;
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.querySelectorAll('.resizing').forEach(el => el.classList.remove('resizing'));
-    }, [handleMouseMove]);
-
-    // Selection Logic
-    const toggleSelectAll = () => {
-        if (selectedIds.size === paginatedLeads.length) setSelectedIds(new Set());
-        else setSelectedIds(new Set(paginatedLeads.map(l => l.id)));
-    };
-
-    const toggleSelect = (id: string) => {
-        const next = new Set(selectedIds);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        setSelectedIds(next);
-    };
 
     const handleSort = (field: keyof Lead) => {
         setSortConfig(current => {
@@ -322,6 +228,7 @@ export default function LeadsPage() {
         });
     };
 
+
     if (isLoading) return <div className="p-4 text-center text-gray-500">Loading leads...</div>;
 
     // ... (Hooks and State remain)
@@ -329,7 +236,11 @@ export default function LeadsPage() {
     return (
         <div className="main-layout-container">
             <LeadsHeader
-                title={activeNicheFilter !== 'All' ? `${activeNicheFilter} Leads` : 'All Leads'}
+                title={
+                    activeNicheFilter !== 'All' ? `${activeNicheFilter} Leads` :
+                        activeCityFilter !== 'All' ? `${activeCityFilter} Leads` :
+                            'All Leads'
+                }
                 count={filteredLeads.length}
                 isSyncing={isRefetching}
                 saveStatus={saveStatus}
@@ -357,107 +268,21 @@ export default function LeadsPage() {
                         }}
                     />
 
-                    {/* Table Container */}
-                    <div className="data-table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th style={{ width: colWidths.checkbox }}>
-                                        <input type="checkbox" checked={paginatedLeads.length > 0 && selectedIds.size === paginatedLeads.length} onChange={toggleSelectAll} />
-                                    </th>
-                                    {visibleColumns.has('sn') && <ResizableHeader col="sn" label="#" width={colWidths.sn} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('business_name') && <ResizableHeader col="business_name" label={<HeaderLabel icon={Building2} text="Business Name" />} width={colWidths.business_name} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('priority') && <ResizableHeader col="priority" label={<HeaderLabel icon={AlertCircle} text="Priority" />} width={colWidths.priority} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('deal_stage') && <ResizableHeader col="deal_stage" label={<HeaderLabel icon={Layers} text="Deal Status" />} width={colWidths.deal_stage} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('contacted') && <ResizableHeader col="contacted" label={<HeaderLabel icon={CheckSquare} text="Contacted" />} width={colWidths.contacted} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('website_status') && <ResizableHeader col="website_status" label={<HeaderLabel icon={Globe} text="Web Status" />} width={colWidths.website_status} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('social') && <ResizableHeader col="social" label={<HeaderLabel icon={Share2} text="Social" />} width={colWidths.social} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('website') && <ResizableHeader col="website" label={<HeaderLabel icon={Link} text="Website" />} width={colWidths.website} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('phone') && <ResizableHeader col="phone" label={<HeaderLabel icon={Phone} text="Phone" />} width={colWidths.phone} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('rating') && <ResizableHeader col="rating" label={<HeaderLabel icon={Star} text="Rating" />} width={colWidths.rating} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('reviews') && <ResizableHeader col="reviews" label={<HeaderLabel icon={MessageSquare} text="Reviews" />} width={colWidths.reviews} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('city') && <ResizableHeader col="city" label={<HeaderLabel icon={MapPin} text="City" />} width={colWidths.city} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('niche') && <ResizableHeader col="niche" label={<HeaderLabel icon={Tag} text="Niche" />} width={colWidths.niche} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-                                    {visibleColumns.has('notes') && <ResizableHeader col="notes" label={<HeaderLabel icon={FileText} text="Notes" />} width={colWidths.notes} sortConfig={sortConfig} onSort={handleSort} onResizeStart={startResize} />}
-
-                                    {/* Add Column Button */}
-                                    <th className="relative" style={{ width: '40px', padding: 0, borderRight: 'none', background: 'var(--bg-surface)' }}>
-                                        <button
-                                            className="w-full h-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
-                                            onClick={() => setShowColumnSelector(true)}
-                                            title="Manage Columns"
-                                        >
-                                            <Plus size={18} />
-                                        </button>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedLeads.map((lead, index) => {
-                                    const isDirty = !!pendingUpdates[lead.id];
-                                    return (
-                                        <tr key={lead.id} className={isDirty ? 'bg-amber-50' : ''}>
-                                            <td>
-                                                <input type="checkbox" checked={selectedIds.has(lead.id)} onChange={() => toggleSelect(lead.id)} />
-                                            </td>
-                                            {visibleColumns.has('sn') && <td><span className="text-[var(--text-muted)]">#{index + 1 + ((currentPage - 1) * itemsPerPage)}</span></td>}
-                                            {visibleColumns.has('business_name') && <td style={{ fontWeight: 500 }}>
-                                                <input
-                                                    className="input-cell font-medium"
-                                                    value={lead.business_name}
-                                                    onChange={(e) => updateLocal(lead.id, 'business_name', e.target.value)}
-                                                />
-                                            </td>}
-                                            {visibleColumns.has('priority') && <td>
-                                                <PrioritySelect value={lead.priority} onChange={(val) => updateLocal(lead.id, 'priority', val)} />
-                                            </td>}
-                                            {visibleColumns.has('deal_stage') && <td>
-                                                <StageSelect value={lead.deal_stage} onChange={(val) => updateLocal(lead.id, 'deal_stage', val)} />
-                                            </td>}
-                                            {visibleColumns.has('contacted') && <td className="text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={lead.contacted}
-                                                    onChange={(e) => updateLocal(lead.id, 'contacted', e.target.checked)}
-                                                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-500)' }}
-                                                />
-                                            </td>}
-                                            {visibleColumns.has('website_status') && <td>
-                                                <WebsiteStatusSelect value={lead.website_status} onChange={(val) => updateLocal(lead.id, 'website_status', val)} />
-                                            </td>}
-                                            {visibleColumns.has('social') && <td>
-                                                <input className="input-cell text-gray-500" placeholder="Social Link" value={lead.social_media || ''} onChange={(e) => updateLocal(lead.id, 'social_media', e.target.value)} />
-                                            </td>}
-                                            {visibleColumns.has('website') && <td>
-                                                <input className="input-cell text-blue-600 hover:underline" placeholder="Website" value={lead.website || ''} onChange={(e) => updateLocal(lead.id, 'website', e.target.value)} />
-                                            </td>}
-                                            {visibleColumns.has('phone') && <td>
-                                                <input className="input-cell text-gray-600" placeholder="Phone" value={lead.phone || ''} onChange={(e) => updateLocal(lead.id, 'phone', e.target.value)} />
-                                            </td>}
-                                            {visibleColumns.has('rating') && <td><span className={(lead.rating || 0) > 4 ? "text-amber-600 font-medium" : "text-gray-500"}>{lead.rating || '-'}</span></td>}
-                                            {visibleColumns.has('reviews') && <td><span className="text-gray-500">{lead.reviews || 0}</span></td>}
-                                            {visibleColumns.has('city') && <td><span className="text-gray-700">{lead.city}</span></td>}
-                                            {visibleColumns.has('niche') && <td style={{ textAlign: 'center' }}>
-                                                <span className="tag" style={{ border: '1px solid var(--border-default)', background: 'var(--gray-100)', color: 'var(--text-muted)' }}>{lead.niche}</span>
-                                            </td>}
-                                            {visibleColumns.has('notes') && <td className="max-w-[200px] truncate" title={lead.notes || ''}>
-                                                {lead.notes || <span className="text-[var(--text-faint)] italic">Empty</span>}
-                                            </td>}
-                                            {/* Delete Action Removed */}
-                                        </tr>
-                                    );
-                                })}
-                                {filteredLeads.length === 0 && (
-                                    <tr>
-                                        <td colSpan={visibleColumns.size + 1} className="text-center p-8 text-[var(--text-muted)]">
-                                            No leads match your filter.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-
-                    </div>
+                    {/* Leads Table Module */}
+                    <LeadsTable
+                        leads={paginatedLeads}
+                        visibleColumns={visibleColumns}
+                        selectedIds={selectedIds}
+                        onSelectionChange={setSelectedIds}
+                        onUpdateLead={updateLocal}
+                        pendingUpdates={pendingUpdates}
+                        sortConfig={sortConfig}
+                        onSortChange={(field) => {
+                            if (field === null) setSortConfig(null);
+                            else handleSort(field);
+                        }}
+                        onOpenColumnManager={() => setShowColumnSelector(true)}
+                    />
 
                     {/* Pagination */}
                     <LeadsPagination

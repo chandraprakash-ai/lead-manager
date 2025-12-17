@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { Search, Layers, Tag, Trash2, ArrowUpDown } from 'lucide-react';
 import type { DealStage, NicheCategory, Lead } from '../../types';
+import './LeadsToolbar.css';
 
 interface LeadsToolbarProps {
     searchValue: string;
@@ -28,7 +28,7 @@ export const LeadsToolbar = ({
     const [showSortMenu, setShowSortMenu] = useState(false);
 
     return (
-        <div className="leads-toolbar relative">
+        <div className="leads-toolbar">
             {/* Left: Search & Filters */}
             <div className="toolbar-left">
                 <div className="search-group">
@@ -81,48 +81,65 @@ export const LeadsToolbar = ({
                 <div className="divider-vertical"></div>
 
                 {/* Sort Option */}
-                <div className="relative">
+                <div style={{ position: 'relative' }}>
                     <button
-                        className={`filter - btn ${showSortMenu ? 'active' : ''} `}
+                        className={`ltoolbar-btn ${showSortMenu ? 'active' : ''}`}
                         onClick={() => { setShowSortMenu(!showSortMenu); }}
                     >
                         <ArrowUpDown size={14} /> Sort
                     </button>
                     {showSortMenu && (
                         <>
-                            <div className="fixed inset-0 z-10" onClick={() => setShowSortMenu(false)}></div>
-                            <div className="absolute top-full left-0 mt-2 w-40 bg-white border border-[var(--border-default)] rounded-lg shadow-lg z-20 p-1 flex flex-col">
+                            <div className="ltoolbar-menu-overlay" onClick={() => setShowSortMenu(false)}></div>
+                            <div className="ltoolbar-menu">
                                 <button
-                                    className={`text - left px - 3 py - 2 text - xs hover: bg - [var(--bg - hover)]rounded - md ${!currentSort ? 'font-medium text-[var(--primary-700)] bg-[var(--primary-50)]' : ''} `}
+                                    className={`ltoolbar-menu-item ${!currentSort ? 'active' : ''}`}
                                     onClick={() => { onSortChange(null); setShowSortMenu(false); }}
                                 >
                                     Default (Newest)
                                 </button>
                                 <button
-                                    className={`text - left px - 3 py - 2 text - xs hover: bg - [var(--bg - hover)]rounded - md ${currentSort?.field === 'business_name' && currentSort.order === 'asc' ? 'font-medium text-[var(--primary-700)] bg-[var(--primary-50)]' : ''} `}
+                                    className={`ltoolbar-menu-item ${currentSort?.field === 'business_name' ? 'active' : ''}`}
                                     onClick={() => { onSortChange('business_name'); setShowSortMenu(false); }}
                                 >
-                                    Name (A-Z)
+                                    Business Name
                                 </button>
-                                {/* Add more quick sorts if needed */}
+                                <button
+                                    className={`ltoolbar-menu-item ${currentSort?.field === 'rating' ? 'active' : ''}`}
+                                    onClick={() => { onSortChange('rating'); setShowSortMenu(false); }}
+                                >
+                                    Rating (High-Low)
+                                </button>
+                                <button
+                                    className={`ltoolbar-menu-item ${currentSort?.field === 'deal_stage' ? 'active' : ''}`}
+                                    onClick={() => { onSortChange('deal_stage'); setShowSortMenu(false); }}
+                                >
+                                    Deal Stage
+                                </button>
                             </div>
                         </>
                     )}
                 </div>
             </div>
 
-            {/* Right: Bulk Actions */}
-            {selectedCount > 0 && (
-                <div className="bulk-actions fade-in">
-                    <span className="selected-count">{selectedCount} selected</span>
-                    <button
-                        className="btn-danger-soft"
-                        onClick={onDeleteSelected}
-                    >
-                        <Trash2 size={13} /> Delete
-                    </button>
-                </div>
-            )}
+            {/* Right: Actions */}
+            <div className="toolbar-right">
+                {selectedCount > 0 && (
+                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2 duration-300">
+                        <span className="text-sm text-[var(--text-muted)]">
+                            <span className="font-medium text-[var(--primary-600)]">{selectedCount}</span> selected
+                        </span>
+                        <button
+                            onClick={onDeleteSelected}
+                            className="ltoolbar-btn ltoolbar-btn-danger"
+                            title="Delete Selected"
+                        >
+                            <Trash2 size={14} />
+                            Delete
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

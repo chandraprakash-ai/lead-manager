@@ -8,12 +8,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 0;
 }
 
 .header-left {
     display: flex;
     flex-direction: column;
 }
+
 
 .page-title {
     font-size: 20px;
@@ -109,8 +111,7 @@
     box-shadow: var(--shadow-sm);
     overflow: hidden;
 }
-
-.leads-toolbar {
+.leads-toolbar .It {
     flex-shrink: 0;
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-default);

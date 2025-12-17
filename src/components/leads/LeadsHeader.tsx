@@ -1,5 +1,5 @@
-
 import { RefreshCw, CheckSquare, Trash2 } from 'lucide-react';
+import './LeadsHeader.css';
 
 interface LeadsHeaderProps {
     title: string;
