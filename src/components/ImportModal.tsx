@@ -124,9 +124,25 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
                     }
 
                     if (dbField === 'priority') {
-                        const vInit = String(value).charAt(0).toUpperCase() + String(value).slice(1).toLowerCase();
-                        if (['High', 'Medium', 'Low'].includes(vInit)) value = vInit;
-                        else value = 'High'; // Default
+                        // Store numeric priority in custom_data
+                        let priorityNum = 0;
+                        const asNum = parseFloat(String(value));
+
+                        if (!isNaN(asNum)) {
+                            priorityNum = asNum;
+                        } else {
+                            // Fallback for legacy strings
+                            const vLower = String(value).toLowerCase();
+                            if (vLower === 'high') priorityNum = 1;
+                            else if (vLower === 'medium') priorityNum = 2;
+                            else if (vLower === 'low') priorityNum = 3;
+                        }
+
+                        // Set specific custom data for priority
+                        lead.custom_data.priority = priorityNum;
+
+                        // Set DB field to valid dummy to avoid Enum error
+                        value = 'Low';
                     }
 
                     if (dbField === 'deal_stage') {
@@ -240,9 +256,9 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
                                         </optgroup>
                                         <optgroup label="Operational">
                                             <option value="priority">Priority</option>
-                                            <option value="deal_stage">Deal Stage</option>
+                                            <option value="deal_stage">Deal Status</option>
                                             <option value="contacted">Contacted</option>
-                                            <option value="follow_up_date">Follow Up Date</option>
+                                            <option value="follow_up_date">Follow-Up Date</option>
                                             <option value="notes">Notes</option>
                                         </optgroup>
                                     </select>

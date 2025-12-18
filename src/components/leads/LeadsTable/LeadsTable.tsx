@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
     AlertCircle, Building2, CheckSquare, FileText, Globe, Layers, Link, MapPin,
-    MessageSquare, Phone, Plus, Share2, Star, Tag, Mail
+    MessageSquare, Phone, Plus, Share2, Star, Tag, Mail, Calendar, Award
 } from 'lucide-react';
 import type { Lead, CustomField } from '../../../types';
 import { HeaderLabel, PrioritySelect, StageSelect, WebsiteStatusSelect } from '../LeadsTableCells';
@@ -15,8 +15,8 @@ interface LeadsTableProps {
     onSelectionChange: (ids: Set<string>) => void;
     onUpdateLead: (id: string, field: keyof Lead | string, value: any) => void;
     pendingUpdates: Record<string, any>;
-    sortConfig: { field: keyof Lead; order: 'asc' | 'desc' } | null;
-    onSortChange: (field: keyof Lead | null) => void;
+    sortConfig: { field: keyof Lead | string; order: 'asc' | 'desc' } | null;
+    onSortChange: (field: keyof Lead | string | null) => void;
     onOpenColumnManager: () => void;
 }
 
@@ -59,14 +59,15 @@ export const LeadsTable = ({
     const [colWidths, setColWidths] = useState<Record<string, number>>({
         checkbox: 40, sn: 60, business_name: 220, email: 200, priority: 140, deal_stage: 160,
         contacted: 100, website_status: 150, social: 180, website: 180,
-        phone: 150, rating: 100, reviews: 100, city: 140, niche: 140, notes: 300
+        phone: 150, rating: 100, score: 100, reviews: 100, city: 140, niche: 140, notes: 300
     });
 
     const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
 
     const startResize = (e: React.MouseEvent, col: string) => {
         e.preventDefault();
-        resizingRef.current = { col, startX: e.clientX, startWidth: colWidths[col] };
+        const startWidth = colWidths[col] || 150;
+        resizingRef.current = { col, startX: e.clientX, startWidth };
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
     };
@@ -120,12 +121,14 @@ export const LeadsTable = ({
                         {visibleColumns.has('website') && <ResizableHeader col="website" label={<HeaderLabel icon={Link} text="Website" />} width={colWidths.website} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('phone') && <ResizableHeader col="phone" label={<HeaderLabel icon={Phone} text="Phone" />} width={colWidths.phone} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('rating') && <ResizableHeader col="rating" label={<HeaderLabel icon={Star} text="Rating" />} width={colWidths.rating} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
+                        {visibleColumns.has('score') && <ResizableHeader col="score" label={<HeaderLabel icon={Award} text="Score" />} width={colWidths.score} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('reviews') && <ResizableHeader col="reviews" label={<HeaderLabel icon={MessageSquare} text="Reviews" />} width={colWidths.reviews} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('city') && <ResizableHeader col="city" label={<HeaderLabel icon={MapPin} text="City" />} width={colWidths.city} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('niche') && <ResizableHeader col="niche" label={<HeaderLabel icon={Tag} text="Niche" />} width={colWidths.niche} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {customFields && customFields.map(cf => visibleColumns.has(cf.key) && (
                             <ResizableHeader key={cf.id} col={cf.key} label={cf.name} width={colWidths[cf.key] || 150} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />
                         ))}
+                        {visibleColumns.has('follow_up_date') && <ResizableHeader col="follow_up_date" label={<HeaderLabel icon={Calendar} text="Follow Up" />} width={colWidths.follow_up_date || 140} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('notes') && <ResizableHeader col="notes" label={<HeaderLabel icon={FileText} text="Notes" />} width={colWidths.notes} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
 
                         {/* Add Column Button */}
@@ -157,7 +160,13 @@ export const LeadsTable = ({
                                     />
                                 </td>}
                                 {visibleColumns.has('priority') && <td>
-                                    <PrioritySelect value={lead.priority} onChange={(val) => onUpdateLead(lead.id, 'priority', val)} />
+                                    <PrioritySelect
+                                        value={
+                                            lead.custom_data?.priority ??
+                                            (lead.priority === 'High' ? 1 : lead.priority === 'Medium' ? 2 : lead.priority === 'Low' ? 3 : 0)
+                                        }
+                                        onChange={(val) => onUpdateLead(lead.id, 'priority', val)}
+                                    />
                                 </td>}
                                 {visibleColumns.has('deal_stage') && <td>
                                     <StageSelect value={lead.deal_stage} onChange={(val) => onUpdateLead(lead.id, 'deal_stage', val)} />
@@ -174,18 +183,39 @@ export const LeadsTable = ({
                                     <WebsiteStatusSelect value={lead.website_status} onChange={(val) => onUpdateLead(lead.id, 'website_status', val)} />
                                 </td>}
                                 {visibleColumns.has('social') && <td>
-                                    <input className="lt-input lt-text-muted" placeholder="Social Link" value={lead.social_media || ''} onChange={(e) => onUpdateLead(lead.id, 'social_media', e.target.value)} />
+                                    {lead.social_media ? (
+                                        <a
+                                            href={lead.social_media.startsWith('http') ? lead.social_media : `https://${lead.social_media}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="lt-text-link hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            Link
+                                        </a>
+                                    ) : <span className="lt-text-muted">-</span>}
                                 </td>}
                                 {visibleColumns.has('email') && <td>
                                     <input className="lt-input lt-text-muted" placeholder="Email" type="email" value={lead.email || ''} onChange={(e) => onUpdateLead(lead.id, 'email', e.target.value)} />
                                 </td>}
                                 {visibleColumns.has('website') && <td>
-                                    <input className="lt-input lt-text-link" placeholder="Website" value={lead.website || ''} onChange={(e) => onUpdateLead(lead.id, 'website', e.target.value)} />
+                                    {lead.website ? (
+                                        <a
+                                            href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="lt-text-link hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            {lead.website.replace(/^https?:\/\/(www\.)?/, '')}
+                                        </a>
+                                    ) : <span className="lt-text-muted">-</span>}
                                 </td>}
                                 {visibleColumns.has('phone') && <td>
                                     <input className="lt-input lt-text-secondary" placeholder="Phone" value={lead.phone || ''} onChange={(e) => onUpdateLead(lead.id, 'phone', e.target.value)} />
                                 </td>}
                                 {visibleColumns.has('rating') && <td className="lt-center"><span className={(lead.rating || 0) > 4 ? "lt-rating-high" : "lt-text-muted"}>{lead.rating || '-'}</span></td>}
+                                {visibleColumns.has('score') && <td className="lt-center"><span className="lt-text-main">{lead.score ?? lead.custom_data?.score ?? '-'}</span></td>}
                                 {visibleColumns.has('reviews') && <td className="lt-center"><span className="lt-text-muted">{lead.reviews || 0}</span></td>}
                                 {visibleColumns.has('city') && <td><span className="lt-text-main">{lead.city}</span></td>}
                                 {visibleColumns.has('niche') && <td className="lt-center">
@@ -200,6 +230,9 @@ export const LeadsTable = ({
                                         />
                                     </td>
                                 ))}
+                                {visibleColumns.has('follow_up_date') && <td>
+                                    <input type="date" className="lt-input" value={lead.follow_up_date ? new Date(lead.follow_up_date).toISOString().split('T')[0] : ''} onChange={(e) => onUpdateLead(lead.id, 'follow_up_date', e.target.value)} />
+                                </td>}
                                 {visibleColumns.has('notes') && <td className="lt-cell-notes" title={lead.notes || ''}>
                                     {lead.notes || <span className="lt-text-faint">Empty</span>}
                                 </td>}

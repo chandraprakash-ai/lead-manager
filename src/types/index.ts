@@ -1,5 +1,5 @@
 export type NicheCategory = 'Cafe' | 'Gym' | 'Clinic' | 'Other';
-export type PriorityLevel = 'High' | 'Medium' | 'Low';
+export type PriorityLevel = 'High' | 'Medium' | 'Low' | number;
 export type DealStage = 'New' | 'Contacted' | 'Interested' | 'Proposal' | 'Closed' | 'Lost';
 export type WebsiteStatus = 'yes' | 'no' | 'bad';
 
@@ -23,6 +23,7 @@ export interface Lead {
 
   // Metrics
   rating?: number | null;
+  score?: number | null;
   reviews?: number; // default 0
 
   // Operational Fields

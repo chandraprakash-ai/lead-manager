@@ -32,7 +32,7 @@ export default function LeadsPage() {
 
     // --- State ---
     const [localSearch, setLocalSearch] = useState(searchParams.get('q') || '');
-    const [sortConfig, setSortConfig] = useState<{ field: keyof Lead; order: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ field: keyof Lead | string; order: 'asc' | 'desc' } | null>({ field: 'score', order: 'desc' });
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isImportOpen, setIsImportOpen] = useState(false);
 
@@ -63,11 +63,31 @@ export default function LeadsPage() {
     const hasPendingChanges = Object.keys(pendingUpdates).length > 0;
 
     const updateLocal = (id: string, field: keyof Lead | string, value: any) => {
+        // Special Handling for Priority (store as number in custom_data to bypass DB Enum)
+        if (field === 'priority') {
+            setPendingUpdates((prev: Record<string, Partial<Lead>>) => {
+                const existing = prev[id] || {};
+                const currentCustom = existing.custom_data || {};
+                // We merge with existing custom_data in pending or safe empty
+                return {
+                    ...prev,
+                    [id]: {
+                        ...existing,
+                        custom_data: {
+                            ...currentCustom,
+                            priority: Number(value)
+                        }
+                    }
+                };
+            });
+            setSaveStatus('unsaved');
+            return;
+        }
+
         // Handle custom fields
         if (customFields.some(cf => cf.key === field)) {
             setPendingUpdates((prev: Record<string, Partial<Lead>>) => {
                 const existing = prev[id] || {};
-                // We'll store it in custom_data object in pendingUpdates.
                 return {
                     ...prev,
                     [id]: {
@@ -200,21 +220,45 @@ export default function LeadsPage() {
         // 3. Sorting
         if (sortConfig) {
             result.sort((a, b) => {
-                const aVal = a[sortConfig.field];
-                const bVal = b[sortConfig.field];
+                const field = sortConfig.field as string;
+                let aVal = (a as any)[field];
+                let bVal = (b as any)[field];
 
-                if (aVal === bVal) return 0;
+                // Check custom_data if not found at root logic
+                if (aVal === undefined && a.custom_data) aVal = a.custom_data[field];
+                if (bVal === undefined && b.custom_data) bVal = b.custom_data[field];
+
+                if (aVal === bVal) {
+                    // Secondary sort: Created DESC
+                    return (new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+                }
                 if (aVal == null) return 1;
                 if (bVal == null) return -1;
 
-                const comparison = aVal < bVal ? -1 : 1;
+                // Helper for number comparison
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return sortConfig.order === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                // Try parsing as number if it looks like one (handle "100" vs "20")
+                const numA = Number(aVal);
+                const numB = Number(bVal);
+                if (!isNaN(numA) && !isNaN(numB) && aVal !== '' && bVal !== '') {
+                    return sortConfig.order === 'asc' ? numA - numB : numB - numA;
+                }
+
+                const comparison = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
                 return sortConfig.order === 'asc' ? comparison : -comparison;
             });
         } else {
-            // Default sort: Created DESC
-            result.sort((a, b) => (new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()));
+            // Default sort: Score DESC, then Created DESC
+            result.sort((a, b) => {
+                const sA = a.score || a.custom_data?.score || 0;
+                const sB = b.score || b.custom_data?.score || 0;
+                if (sA !== sB) return Number(sB) - Number(sA);
+                return (new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+            });
         }
-
         return result;
     }, [allLeads, pendingUpdates, hasPendingChanges, activeNicheFilters, activeCityFilters, activeStageFilter, localSearch, sortConfig]);
 
@@ -240,9 +284,13 @@ export default function LeadsPage() {
             { id: 'website', label: 'Website' },
             { id: 'phone', label: 'Phone' },
             { id: 'rating', label: 'Rating' },
+            { id: 'score', label: 'Score' },
             { id: 'reviews', label: 'Reviews' },
             { id: 'city', label: 'City' },
             { id: 'niche', label: 'Niche' },
+            { id: 'target', label: 'Target' },
+            { id: 'tags', label: 'Tags' },
+            { id: 'follow_up_date', label: 'Follow Up' },
             { id: 'notes', label: 'Notes' },
         ];
         // Merge custom fields
@@ -266,7 +314,7 @@ export default function LeadsPage() {
         setVisibleColumnsList(Array.from(next));
     };
 
-    const handleSort = (field: keyof Lead) => {
+    const handleSort = (field: keyof Lead | string) => {
         setSortConfig(current => {
             if (current?.field === field) return { field, order: current.order === 'asc' ? 'desc' : 'asc' };
             return { field, order: 'desc' };

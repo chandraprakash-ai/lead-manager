@@ -22,8 +22,8 @@ interface LeadsToolbarProps {
 
     selectedCount: number;
     onDeleteSelected: () => void;
-    currentSort: { field: keyof Lead; order: 'asc' | 'desc' } | null;
-    onSortChange: (field: keyof Lead | null) => void;
+    currentSort: { field: keyof Lead | string; order: 'asc' | 'desc' } | null;
+    onSortChange: (field: keyof Lead | string | null) => void;
 }
 
 export const LeadsToolbar = ({
@@ -195,7 +195,7 @@ export const LeadsToolbar = ({
                                     className={`ltoolbar-menu-item ${!currentSort ? 'active' : ''}`}
                                     onClick={() => { onSortChange(null); setShowSortMenu(false); }}
                                 >
-                                    Default (Newest)
+                                    Default (Score)
                                 </button>
                                 <button
                                     className={`ltoolbar-menu-item ${currentSort?.field === 'business_name' ? 'active' : ''}`}

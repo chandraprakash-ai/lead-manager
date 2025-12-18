@@ -38,6 +38,20 @@
     --text-muted: var(--gray-500);
     --text-faint: var(--gray-400);
 
+    /* --- Colors: State (Tags/Status) --- */
+    --success-bg: #ecfdf5;
+    --success-text: #059669;
+    /* Emerald 600 */
+    --warning-bg: #fffbeb;
+    --warning-text: #d97706;
+    /* Amber 600 */
+    --danger-bg: #fef2f2;
+    --danger-text: #dc2626;
+    /* Red 600 */
+    --info-bg: #eff6ff;
+    --info-text: #2563eb;
+    /* Blue 600 */
+
     --border-default: var(--gray-200);
     --border-subtle: var(--gray-100);
     --border-active: var(--primary-500);
