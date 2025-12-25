@@ -19,6 +19,13 @@
     gap: 12px;
 }
 
+.toolbar-left {
+    flex: 1;
+    /* Take remaining space */
+    min-width: 0;
+    /* Allow shrinking */
+}
+
 /* Search Group */
 .search-group {
     position: relative;
@@ -287,12 +294,26 @@
     line-height: 1;
 }
 
+/* Active Tags Display */
 .active-tags-list {
     display: flex;
-    align-items: center;
-    gap: 4px;
+    flex-direction: column;
     flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 4px;
     margin-left: 8px;
+    height: 52px;
+    /* Height for exactly 2 rows of tags (approx 24px each + gap) */
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    /* Layout constraints to prevent overlap */
+    flex: 1;
+    /* Allow it to take available space */
+    min-width: 0;
+    /* Enable shrinking */
+    max-width: 600px;
+    /* Optional cap to prevent excessive growth if needed */
 }
 
 /* Restored Tag Styles */

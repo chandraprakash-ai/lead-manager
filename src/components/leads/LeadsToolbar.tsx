@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Layers, Tag, Trash2, ArrowUpDown, X, ListFilter, MapPin, CheckSquare, Globe, ChevronDown, Undo, Redo, Pencil } from 'lucide-react';
+import { Search, Layers, Tag, Trash2, ArrowUpDown, X, ListFilter, MapPin, CheckSquare, Globe, ChevronDown, Undo, Redo, Pencil, Calendar, Flag } from 'lucide-react';
 import type { DealStage, Lead, WebsiteStatus } from '../../types';
 import './LeadsToolbar.css';
 
@@ -52,7 +52,7 @@ export const LeadsToolbar = ({
 
     // Bulk Menus
     const [showEditMenu, setShowEditMenu] = useState(false);
-    const [editSubMenu, setEditSubMenu] = useState<'contacted' | 'status' | 'web' | null>(null);
+    const [editSubMenu, setEditSubMenu] = useState<'contacted' | 'status' | 'web' | 'niche' | 'city' | 'country' | 'followup' | null>(null);
 
     // Helper to toggle item in array
     const toggleItem = (current: string[], item: string, onChange: (v: string[]) => void) => {
@@ -219,31 +219,31 @@ export const LeadsToolbar = ({
                     )}
                 </div>
 
-                {/* Active Tags Display (Removable) */}
+                {/* Active Tags Display */}
                 <div className="active-tags-list">
-                    {activeStages.map(stage => (
-                        <div key={stage} className="filter-tag">
+                    {activeStages.map(s => (
+                        <div key={s} className="filter-tag">
                             <Layers size={10} className="opacity-50" />
-                            <span>{stage}</span>
-                            <button onClick={() => toggleItem(activeStages, stage, onStagesChange as any)} className="remove-tag">
+                            <span>{s}</span>
+                            <button onClick={() => toggleItem(activeStages, s, onStagesChange as any)} className="remove-tag">
                                 <X size={10} />
                             </button>
                         </div>
                     ))}
-                    {activeNiches.map(niche => (
-                        <div key={niche} className="filter-tag">
+                    {activeNiches.map(n => (
+                        <div key={n} className="filter-tag">
                             <Tag size={10} className="opacity-50" />
-                            <span>{niche}</span>
-                            <button onClick={() => toggleItem(activeNiches, niche, onNichesChange)} className="remove-tag">
+                            <span>{n}</span>
+                            <button onClick={() => toggleItem(activeNiches, n, onNichesChange)} className="remove-tag">
                                 <X size={10} />
                             </button>
                         </div>
                     ))}
-                    {activeCities.map(city => (
-                        <div key={city} className="filter-tag">
+                    {activeCities.map(c => (
+                        <div key={c} className="filter-tag">
                             <MapPin size={10} className="opacity-50" />
-                            <span>{city}</span>
-                            <button onClick={() => toggleItem(activeCities, city, onCitiesChange)} className="remove-tag">
+                            <span>{c}</span>
+                            <button onClick={() => toggleItem(activeCities, c, onCitiesChange)} className="remove-tag">
                                 <X size={10} />
                             </button>
                         </div>
@@ -344,7 +344,7 @@ export const LeadsToolbar = ({
                                     <div className="ltoolbar-menu">
                                         {/* Contacted Item */}
                                         <div
-                                            className="relative"
+                                            style={{ position: 'relative' }}
                                             onMouseEnter={() => setEditSubMenu('contacted')}
                                         >
                                             <button className="ltoolbar-menu-item w-full flex justify-between items-center">
@@ -371,7 +371,7 @@ export const LeadsToolbar = ({
 
                                         {/* Status Item */}
                                         <div
-                                            className="relative"
+                                            style={{ position: 'relative' }}
                                             onMouseEnter={() => setEditSubMenu('status')}
                                         >
                                             <button className="ltoolbar-menu-item w-full flex justify-between items-center">
@@ -393,9 +393,129 @@ export const LeadsToolbar = ({
                                             )}
                                         </div>
 
+                                        {/* Niche Item */}
+                                        <div
+                                            style={{ position: 'relative' }}
+                                            onMouseEnter={() => setEditSubMenu('niche')}
+                                        >
+                                            <button className="ltoolbar-menu-item w-full flex justify-between items-center">
+                                                <span className="flex items-center gap-2"><Tag size={14} /> Niche</span>
+                                                <ChevronDown size={12} className="-rotate-90" />
+                                            </button>
+                                            {editSubMenu === 'niche' && (
+                                                <div className="ltoolbar-submenu">
+                                                    {availableNiches.map(niche => (
+                                                        <button
+                                                            key={niche}
+                                                            className="ltoolbar-menu-item"
+                                                            onClick={() => { onBulkUpdate({ niche: niche as any }); setShowEditMenu(false); }}
+                                                        >
+                                                            {niche}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* City Item */}
+                                        <div
+                                            style={{ position: 'relative' }}
+                                            onMouseEnter={() => setEditSubMenu('city')}
+                                        >
+                                            <button className="ltoolbar-menu-item w-full flex justify-between items-center">
+                                                <span className="flex items-center gap-2"><MapPin size={14} /> City</span>
+                                                <ChevronDown size={12} className="-rotate-90" />
+                                            </button>
+                                            {editSubMenu === 'city' && (
+                                                <div className="ltoolbar-submenu">
+                                                    <div className="p-2 border-b border-gray-100">
+                                                        <input
+                                                            className="w-full text-xs p-1 border rounded"
+                                                            placeholder="Type & Enter..."
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    onBulkUpdate({ city: e.currentTarget.value });
+                                                                    setShowEditMenu(false);
+                                                                }
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                    </div>
+                                                    {availableCities.slice(0, 5).map(city => (
+                                                        <button
+                                                            key={city}
+                                                            className="ltoolbar-menu-item"
+                                                            onClick={() => { onBulkUpdate({ city }); setShowEditMenu(false); }}
+                                                        >
+                                                            {city}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Country Item */}
+                                        <div
+                                            style={{ position: 'relative' }}
+                                            onMouseEnter={() => setEditSubMenu('country')}
+                                        >
+                                            <button className="ltoolbar-menu-item w-full flex justify-between items-center">
+                                                <span className="flex items-center gap-2"><Flag size={14} /> Country</span>
+                                                <ChevronDown size={12} className="-rotate-90" />
+                                            </button>
+                                            {editSubMenu === 'country' && (
+                                                <div className="ltoolbar-submenu p-2">
+                                                    <input
+                                                        className="w-full text-xs p-1 border rounded"
+                                                        placeholder="Type Country..."
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                onBulkUpdate({ country: e.currentTarget.value });
+                                                                setShowEditMenu(false);
+                                                            }
+                                                        }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        autoFocus
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Follow Up Date */}
+                                        <div
+                                            style={{ position: 'relative' }}
+                                            onMouseEnter={() => setEditSubMenu('followup')}
+                                        >
+                                            <button className="ltoolbar-menu-item w-full flex justify-between items-center">
+                                                <span className="flex items-center gap-2"><Calendar size={14} /> Follow Up</span>
+                                                <ChevronDown size={12} className="-rotate-90" />
+                                            </button>
+                                            {editSubMenu === 'followup' && (
+                                                <div className="ltoolbar-submenu p-2">
+                                                    <input
+                                                        type="date"
+                                                        className="w-full text-xs p-1 border rounded cursor-pointer"
+                                                        onChange={(e) => {
+                                                            if (e.target.value) {
+                                                                onBulkUpdate({ follow_up_date: e.target.value });
+                                                                setShowEditMenu(false);
+                                                            }
+                                                        }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                    <button
+                                                        className="mt-2 w-full text-xs bg-red-50 text-red-600 py-1 rounded hover:bg-red-100"
+                                                        onClick={() => { onBulkUpdate({ follow_up_date: null }); setShowEditMenu(false); }}
+                                                    >
+                                                        Clear Date
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         {/* Web Item */}
                                         <div
-                                            className="relative"
+                                            style={{ position: 'relative' }}
                                             onMouseEnter={() => setEditSubMenu('web')}
                                         >
                                             <button className="ltoolbar-menu-item w-full flex justify-between items-center">

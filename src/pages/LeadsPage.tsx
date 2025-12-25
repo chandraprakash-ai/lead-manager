@@ -457,9 +457,17 @@ export default function LeadsPage() {
 
     const getHeaderTitle = () => {
         if (activeNicheFilters.length > 0) {
+            const count = activeNicheFilters.length;
+            if (count > 2) {
+                return `${activeNicheFilters.slice(0, 2).join(', ')} & ${count - 2} others Leads`;
+            }
             return `${activeNicheFilters.join(', ')} Leads`;
         }
         if (activeCityFilters.length > 0) {
+            const count = activeCityFilters.length;
+            if (count > 2) {
+                return `${activeCityFilters.slice(0, 2).join(', ')} & ${count - 2} others Leads`;
+            }
             return `${activeCityFilters.join(', ')} Leads`;
         }
         return 'All Leads';
