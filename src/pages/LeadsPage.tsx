@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchLeads, bulkUpdateLeads, fetchUniqueNiches, fetchUniqueCities } from '../api/leads';
 import { fetchCustomFields, createCustomField, deleteCustomField } from '../api/customFields';
@@ -12,6 +12,7 @@ import { LeadsHeader } from '../components/leads/LeadsHeader';
 import { ColumnManager } from '../components/leads/ColumnManager';
 import { LeadsPagination } from '../components/leads/LeadsPagination';
 import { LeadsTable } from '../components/leads/LeadsTable/LeadsTable';
+import { useActionHistory } from '../context/ActionHistoryContext';
 import './LeadsPage.css';
 
 export default function LeadsPage() {
@@ -29,7 +30,6 @@ export default function LeadsPage() {
     const { data: allNiches = [] } = useQuery({ queryKey: ['niches'], queryFn: fetchUniqueNiches });
     const { data: allCities = [] } = useQuery({ queryKey: ['cities'], queryFn: fetchUniqueCities });
     const { data: customFields = [] } = useQuery({ queryKey: ['customFields'], queryFn: fetchCustomFields });
-
     // --- State ---
     const [localSearch, setLocalSearch] = useState(searchParams.get('q') || '');
     const [sortConfig, setSortConfig] = useState<{ field: keyof Lead | string; order: 'asc' | 'desc' } | null>({ field: 'score', order: 'desc' });
@@ -37,7 +37,7 @@ export default function LeadsPage() {
     const [isImportOpen, setIsImportOpen] = useState(false);
 
     // Filters
-    const [activeStageFilter, setActiveStageFilter] = useState<DealStage | 'All'>('All');
+    const [activeStageFilters, setActiveStageFilters] = useState<DealStage[]>([]);
 
     // Multi-select Filters (Arrays)
     const [activeNicheFilters, setActiveNicheFilters] = useState<string[]>(
@@ -46,6 +46,7 @@ export default function LeadsPage() {
     const [activeCityFilters, setActiveCityFilters] = useState<string[]>(
         searchParams.get('city') ? [searchParams.get('city')!] : []
     );
+    const [activeContactedFilter, setActiveContactedFilter] = useState<'all' | 'yes' | 'no'>('all');
 
     // --- Sync State with URL ---
     useEffect(() => {
@@ -56,6 +57,9 @@ export default function LeadsPage() {
         setActiveCityFilters(cityParam ? [cityParam] : []);
     }, [searchParams]);
 
+    // --- Undo/Redo ---
+    const { addAction, undo, redo, canUndo, canRedo } = useActionHistory();
+
     // --- Local Pending Updates ---
     const [pendingUpdates, setPendingUpdates] = useLocalStorage<Record<string, Partial<Lead>>>('leads_pending_updates', {});
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
@@ -63,47 +67,142 @@ export default function LeadsPage() {
     const hasPendingChanges = Object.keys(pendingUpdates).length > 0;
 
     const updateLocal = (id: string, field: keyof Lead | string, value: any) => {
-        // Special Handling for Priority (store as number in custom_data to bypass DB Enum)
+        // 1. Capture State for Undo
+        const baseLead = allLeads.find(l => l.id === id);
+        const existingPending = pendingUpdates[id] || {};
+
+        // Get the current value (either pending or base)
+        let prevValue: any;
         if (field === 'priority') {
-            setPendingUpdates((prev: Record<string, Partial<Lead>>) => {
-                const existing = prev[id] || {};
-                const currentCustom = existing.custom_data || {};
-                // We merge with existing custom_data in pending or safe empty
-                return {
-                    ...prev,
-                    [id]: {
-                        ...existing,
-                        custom_data: {
-                            ...currentCustom,
-                            priority: Number(value)
+            prevValue = existingPending.custom_data?.priority ?? baseLead?.custom_data?.priority;
+        } else if (customFields.some(cf => cf.key === field)) {
+            prevValue = existingPending.custom_data?.[field as string] ?? baseLead?.custom_data?.[field as string];
+        } else {
+            // @ts-ignore
+            prevValue = existingPending[field] ?? baseLead?.[field];
+        }
+
+        const actionName = `Update ${field}`;
+
+        addAction({
+            name: actionName,
+            businessName: baseLead?.business_name,
+            category: baseLead?.niche,
+            city: baseLead?.city,
+            details: `Changed ${field} from "${String(prevValue ?? 'empty')}" to "${String(value ?? 'empty')}"`,
+            undo: () => {
+                setPendingUpdates(prev => {
+                    const next = { ...prev };
+                    const current = next[id] || {};
+                    // Revert logic
+                    if (field === 'priority') {
+                        next[id] = { ...current, custom_data: { ...(current.custom_data || {}), priority: prevValue } };
+                    } else if (customFields.some(cf => cf.key === field)) {
+                        next[id] = { ...current, custom_data: { ...(current.custom_data || {}), [field as string]: prevValue } };
+                    } else {
+                        next[id] = { ...current, [field as keyof Lead]: prevValue };
+                    }
+                    return next;
+                });
+                setSaveStatus('unsaved');
+            },
+            redo: () => {
+                setPendingUpdates(prev => {
+                    // Re-apply the exact same logic as the main update
+                    // Ideally we'd extract the logic below into a pure function, but we can just use the setter
+                    // Actually, simpler: just trigger the updateLocal again? No, that would add another action.
+                    // We must reproduce the state change manually here.
+                    const existing = prev[id] || {};
+                    const nextUpdate = { ...existing };
+                    if (field === 'priority') {
+                        nextUpdate.custom_data = { ...(existing.custom_data || {}), priority: Number(value) };
+                    } else if (customFields.some(cf => cf.key === field)) {
+                        nextUpdate.custom_data = { ...(existing.custom_data || {}), [field as string]: value };
+                    } else {
+                        nextUpdate[field as keyof Partial<Lead>] = value;
+                    }
+                    // Side effects (automation) logic must also be repeated or we risk desync. 
+                    // For brevity in redo, we assume direct field set. 
+                    // To be perfect, we should extract the "calculateNextState" function.
+
+                    // Lets duplicate side-effects logic for correctness:
+                    const currentStage = existing.deal_stage ?? baseLead?.deal_stage;
+                    if (field === 'contacted') {
+                        if (value === true) {
+                            if (!currentStage || currentStage === 'New') nextUpdate.deal_stage = 'Contacting';
+                        } else {
+                            if (currentStage === 'Contacting') nextUpdate.deal_stage = 'New';
                         }
                     }
-                };
-            });
-            setSaveStatus('unsaved');
-            return;
-        }
-
-        // Handle custom fields
-        if (customFields.some(cf => cf.key === field)) {
-            setPendingUpdates((prev: Record<string, Partial<Lead>>) => {
-                const existing = prev[id] || {};
-                return {
-                    ...prev,
-                    [id]: {
-                        ...existing,
-                        custom_data: { ...(existing.custom_data || {}), [field as string]: value }
+                    if (field === 'deal_stage') {
+                        if (value === 'Contacting') nextUpdate.contacted = true;
+                        else if (value === 'New') nextUpdate.contacted = false;
                     }
-                };
-            });
-            setSaveStatus('unsaved');
-            return;
-        }
 
-        setPendingUpdates((prev: Record<string, Partial<Lead>>) => ({
-            ...prev,
-            [id]: { ...prev[id], [field]: value }
-        }));
+                    return { ...prev, [id]: nextUpdate };
+                });
+                setSaveStatus('unsaved');
+            }
+        });
+
+        setPendingUpdates((prev: Record<string, Partial<Lead>>) => {
+            const existing = prev[id] || {};
+            // Determine effective current values for logic
+            const currentStage = existing.deal_stage ?? baseLead?.deal_stage;
+
+            // Prepare the new update object
+            const nextUpdate = { ...existing };
+
+            // 1. Apply the primary change
+            if (field === 'priority') {
+                nextUpdate.custom_data = {
+                    ...(existing.custom_data || {}),
+                    priority: Number(value)
+                };
+            } else if (customFields.some(cf => cf.key === field)) {
+                nextUpdate.custom_data = {
+                    ...(existing.custom_data || {}),
+                    [field as string]: value
+                };
+            } else {
+                nextUpdate[field as keyof Partial<Lead>] = value;
+            }
+
+            // 2. Apply Automation Logic (Side Effects)
+
+            // Link Contacted -> Deal Stage
+            if (field === 'contacted') {
+                if (value === true) {
+                    // If ticking Contacted, move to Contacting ONLY if currently New (or undefined)
+                    // We avoid demoting "Interested", "Proposal", etc.
+                    if (!currentStage || currentStage === 'New') {
+                        nextUpdate.deal_stage = 'Contacting';
+                    }
+                } else {
+                    // If unticking Contacted, move back to New ONLY if currently Contacting
+                    if (currentStage === 'Contacting') {
+                        nextUpdate.deal_stage = 'New';
+                    }
+                }
+            }
+
+            // Link Deal Stage -> Contacted
+            if (field === 'deal_stage') {
+                const newStage = value as DealStage;
+                if (newStage === 'Contacting') {
+                    nextUpdate.contacted = true;
+                } else if (newStage === 'New') {
+                    nextUpdate.contacted = false;
+                }
+                // For other stages (Interested, Proposal, etc), we do NOT force 'contacted' state
+                // This adheres to "don't change contacted when i move up"
+            }
+
+            return {
+                ...prev,
+                [id]: nextUpdate
+            };
+        });
         setSaveStatus('unsaved');
     };
 
@@ -126,13 +225,33 @@ export default function LeadsPage() {
     // --- Mutations ---
     const saveMutation = useMutation({
         mutationFn: async (updates: Record<string, Partial<Lead>>) => {
-            const batch = Object.entries(updates).map(([id, changes]) => ({ id, changes }));
+            const ALLOWED_FIELDS = [
+                'business_name', 'contact_name', 'email', 'niche', 'city', 'country', 'map',
+                'website', 'website_status', 'social_media', 'phone', 'rating', 'score',
+                'reviews', 'contacted', 'priority', 'deal_stage', 'follow_up_date', 'notes', 'custom_data'
+            ];
+
+            const batch = Object.entries(updates).map(([id, changes]) => {
+                const sanitizedChanges: any = {};
+                Object.keys(changes).forEach(key => {
+                    if (ALLOWED_FIELDS.includes(key)) {
+                        sanitizedChanges[key] = (changes as any)[key];
+                    }
+                });
+                return { id, changes: sanitizedChanges };
+            });
             return bulkUpdateLeads(batch);
         },
         onSuccess: () => {
             setPendingUpdates({});
             setSaveStatus('saved');
             queryClient.invalidateQueries({ queryKey: ['leads'] });
+        },
+        onError: (error) => {
+            console.error("Failed to save changes:", error);
+            setSaveStatus('unsaved'); // Keep as unsaved so user knows retry is needed
+            // Optional: You could show a toast here
+            alert("Failed to save changes. Please check if 'country' column exists in Supabase or check console for details.");
         }
     });
 
@@ -175,7 +294,7 @@ export default function LeadsPage() {
     // Reset page on filter change
     useEffect(() => {
         setCurrentPage(1);
-    }, [localSearch, activeStageFilter, activeNicheFilters, activeCityFilters]);
+    }, [localSearch, activeStageFilters, activeNicheFilters, activeCityFilters, activeContactedFilter]);
 
     const filteredLeads = useMemo(() => {
         let result = [...(allLeads || [])];
@@ -200,8 +319,16 @@ export default function LeadsPage() {
             result = result.filter(l => l.city && activeCityFilters.includes(l.city));
         }
 
-        if (activeStageFilter !== 'All') {
-            result = result.filter(l => l.deal_stage === activeStageFilter);
+        if (activeStageFilters.length > 0) {
+            result = result.filter(l => {
+                const stage = (l.deal_stage as string) === 'Contacted' ? 'Contacting' : l.deal_stage;
+                return activeStageFilters.includes(stage as DealStage);
+            });
+        }
+
+        if (activeContactedFilter !== 'all') {
+            const isContacted = activeContactedFilter === 'yes';
+            result = result.filter(l => Boolean(l.contacted) === isContacted);
         }
 
         // Search
@@ -260,7 +387,7 @@ export default function LeadsPage() {
             });
         }
         return result;
-    }, [allLeads, pendingUpdates, hasPendingChanges, activeNicheFilters, activeCityFilters, activeStageFilter, localSearch, sortConfig]);
+    }, [allLeads, pendingUpdates, hasPendingChanges, activeNicheFilters, activeCityFilters, activeStageFilters, activeContactedFilter, localSearch, sortConfig]);
 
     // Pagination View
     const paginatedLeads = useMemo(() => {
@@ -287,6 +414,8 @@ export default function LeadsPage() {
             { id: 'score', label: 'Score' },
             { id: 'reviews', label: 'Reviews' },
             { id: 'city', label: 'City' },
+            { id: 'country', label: 'Country' },
+            { id: 'map', label: 'Map' },
             { id: 'niche', label: 'Niche' },
             { id: 'target', label: 'Target' },
             { id: 'tags', label: 'Tags' },
@@ -316,7 +445,12 @@ export default function LeadsPage() {
 
     const handleSort = (field: keyof Lead | string) => {
         setSortConfig(current => {
-            if (current?.field === field) return { field, order: current.order === 'asc' ? 'desc' : 'asc' };
+            if (current?.field === field) {
+                // Cycle: DESC -> ASC -> OFF
+                if (current.order === 'desc') return { field, order: 'asc' };
+                if (current.order === 'asc') return null; // Turn off sorting
+            }
+            // New field or was off -> Default to DESC (usually better for scores/dates)
             return { field, order: 'desc' };
         });
     };
@@ -331,10 +465,12 @@ export default function LeadsPage() {
         return 'All Leads';
     };
 
+    const navigate = useNavigate();
+
     if (isLeadsLoading) return <div className="p-4 text-center text-gray-500">Loading leads...</div>;
 
     return (
-        <div className="main-layout-container">
+        <div className="leads-page main-layout-container">
             <LeadsHeader
                 title={getHeaderTitle()}
                 count={filteredLeads.length}
@@ -344,6 +480,7 @@ export default function LeadsPage() {
                 onImport={() => setIsImportOpen(true)}
                 hasPendingChanges={hasPendingChanges}
                 onSave={() => saveMutation.mutate(pendingUpdates)}
+                onActivityClick={() => navigate('/activity')}
             />
 
             <main className="content-wrapper">
@@ -351,8 +488,8 @@ export default function LeadsPage() {
                     <LeadsToolbar
                         searchValue={localSearch}
                         onSearchChange={setLocalSearch}
-                        activeStage={activeStageFilter}
-                        onStageChange={setActiveStageFilter}
+                        activeStages={activeStageFilters}
+                        onStagesChange={setActiveStageFilters}
 
                         activeNiches={activeNicheFilters}
                         onNichesChange={setActiveNicheFilters}
@@ -362,6 +499,9 @@ export default function LeadsPage() {
                         onCitiesChange={setActiveCityFilters}
                         availableCities={allCities}
 
+                        activeContacted={activeContactedFilter}
+                        onContactedChange={setActiveContactedFilter}
+
                         selectedCount={selectedIds.size}
                         onDeleteSelected={() => {
                             if (confirm(`Delete ${selectedIds.size} leads ? `)) bulkDeleteMutation.mutate(Array.from(selectedIds));
@@ -370,6 +510,73 @@ export default function LeadsPage() {
                         onSortChange={(field) => {
                             if (field === null) setSortConfig(null);
                             else handleSort(field);
+                        }}
+
+                        canUndo={canUndo}
+                        canRedo={canRedo}
+                        onUndo={undo}
+                        onRedo={redo}
+
+                        onBulkUpdate={(updates) => {
+                            // 1. Capture previous state for Undo
+                            const previousState: Record<string, Partial<Lead>> = {};
+                            selectedIds.forEach(id => {
+                                // Logic to get current effective value from pendingUpdates OR allLeads
+                                const currentLead = allLeads.find(l => l.id === id);
+                                if (!currentLead) return;
+
+                                const pending = pendingUpdates[id] || {};
+                                // We only need to save the fields being updated
+                                Object.keys(updates).forEach(key => {
+                                    // @ts-ignore
+                                    previousState[id] = previousState[id] || {};
+                                    // @ts-ignore
+                                    previousState[id][key] = pending[key] ?? currentLead[key];
+                                });
+                            });
+
+                            const updateAction = {
+                                name: 'Bulk Update',
+                                businessName: `${selectedIds.size} Leads`,
+                                category: 'Multiple', // Could technically deduce if filters are applied, but simpler this way
+                                city: 'Multiple',
+                                details: `Updated ${Object.keys(updates).join(', ')}`,
+                                undo: () => {
+                                    setPendingUpdates(prev => {
+                                        const next = { ...prev };
+                                        Object.entries(previousState).forEach(([id, revertChanges]) => {
+                                            const existing = next[id] || {};
+                                            next[id] = { ...existing, ...revertChanges };
+                                        });
+                                        return next;
+                                    });
+                                    setSaveStatus('unsaved');
+                                },
+                                redo: () => {
+                                    setPendingUpdates(prev => {
+                                        const next = { ...prev };
+                                        selectedIds.forEach(id => {
+                                            const existing = next[id] || {};
+                                            next[id] = { ...existing, ...updates };
+                                        });
+                                        return next;
+                                    });
+                                    setSaveStatus('unsaved');
+                                }
+                            };
+
+                            addAction(updateAction);
+
+                            // 2. Apply Update
+                            setPendingUpdates((prev: Record<string, Partial<Lead>>) => {
+                                const next = { ...prev };
+                                selectedIds.forEach(id => {
+                                    const existing = next[id] || {};
+                                    next[id] = { ...existing, ...updates };
+                                });
+                                return next;
+                            });
+                            setSaveStatus('unsaved');
                         }}
                     />
 

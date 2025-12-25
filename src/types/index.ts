@@ -1,6 +1,6 @@
 export type NicheCategory = 'Cafe' | 'Gym' | 'Clinic' | 'Other';
 export type PriorityLevel = 'High' | 'Medium' | 'Low' | number;
-export type DealStage = 'New' | 'Contacted' | 'Interested' | 'Proposal' | 'Closed' | 'Lost';
+export type DealStage = 'New' | 'Contacting' | 'Interested' | 'Proposal' | 'Closed' | 'Lost';
 export type WebsiteStatus = 'yes' | 'no' | 'bad';
 
 export interface Lead {
@@ -13,6 +13,8 @@ export interface Lead {
   email?: string | null;
   niche: NicheCategory;
   city: string;
+  country?: string;
+  map?: string | null;
   website?: string | null;
   website_status?: 'yes' | 'no' | 'bad' | null;
   social_media?: string | null;

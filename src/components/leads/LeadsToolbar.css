@@ -166,6 +166,28 @@
     animation: menu-slide-down 0.1s ease-out;
 }
 
+.ltoolbar-submenu {
+    position: absolute;
+    top: 0;
+    right: 100%;
+    margin-right: 4px;
+    width: 160px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 40;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    animation: menu-slide-down 0.1s ease-out;
+}
+
+.ltoolbar-menu-right {
+    left: auto;
+    right: 0;
+}
+
 .ltoolbar-menu-item {
     text-align: left;
     padding: 8px 12px;

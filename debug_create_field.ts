@@ -23,21 +23,31 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function testCreate() {
-    console.log('Attempting to create a test custom field...');
-    const { data, error } = await supabase.from('custom_fields').insert({
-        name: 'Debug Field',
-        key: 'debug_field',
-        type: 'text'
-    }).select();
+async function testUpdate() {
+    console.log('Attempting to update a lead with new fields...');
+
+    // 1. Get a lead
+    const { data: leads, error: fetchError } = await supabase.from('leads').select('id').limit(1);
+    if (fetchError || !leads || leads.length === 0) {
+        console.error("Could not fetch a lead to test:", fetchError);
+        return;
+    }
+
+    const leadId = leads[0].id;
+    console.log(`Testing update on lead: ${leadId}`);
+
+    // 2. Try update
+    const { data, error } = await supabase.from('leads').update({
+        country: 'Test Country',
+        map: 'https://test.map',
+        email: 'test@example.com'
+    }).eq('id', leadId).select();
 
     if (error) {
-        console.error('Error creating field:', error);
+        console.error('Error updating lead:', error);
     } else {
-        console.log('Success:', data);
-        // Cleanup
-        await supabase.from('custom_fields').delete().eq('key', 'debug_field');
+        console.log('Success! Updated lead:', data);
     }
 }
 
-testCreate();
+testUpdate();

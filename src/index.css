@@ -1,4 +1,5 @@
 @import './styles/design-system.css';
+@import './styles/page-header.css';
 
 /* Compatibility Layer for Old Variables (to be removed after full refactor) */
 :root {

@@ -1,46 +1,10 @@
 /* src/components/leads/LeadsHeader.css */
-
-.page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 24px 32px;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    margin-bottom: 24px;
-}
-
-.header-left {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+/* Styles here override or extend src/styles/page-header.css specific to LeadsHeader */
 
 .page-title {
+    /* Extending base .page-title with specific font setting if needed, or remove if standardizing */
     font-family: var(--font-display);
     font-size: 24px;
-    font-weight: 600;
-    color: var(--text-main);
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin: 0;
-}
-
-.page-subtitle {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--text-muted);
-}
-
-.header-meta {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 13px;
 }
 
 .record-count {

@@ -1,0 +1,10 @@
+.dashboard-page .page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}

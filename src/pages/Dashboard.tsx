@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchLeads } from '../api/leads';
 import { BarChart3, Users, CheckCircle, ListFilter } from 'lucide-react';
+import './Dashboard.css';
 
 export default function Dashboard() {
     const { data: leads = [], isLoading } = useQuery({
@@ -17,17 +18,24 @@ export default function Dashboard() {
     const highPriority = leads?.filter(l => l.priority === 'High' && l.deal_stage !== 'Closed' && l.deal_stage !== 'Lost').length || 0;
 
     return (
-        <div className="p-4">
-            <div className="flex justify-between items-center" style={{ marginBottom: '24px' }}>
-                <h1>Dashboard</h1>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Operational Overview</div>
-            </div>
+        <div className="dashboard-page flex flex-col h-full bg-[var(--bg-app)]">
+            <header className="page-header">
+                <div className="header-left">
+                    <h1 className="page-title">
+                        Dashboard
+                        <span className="page-subtitle">Operational Overview</span>
+                    </h1>
+                </div>
+            </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                <StatCard title="Total Pipeline" value={total} icon={<Users size={20} color="var(--primary-blue)" />} />
-                <StatCard title="Contacted Leads" value={contacted} subtext={`${((contacted / total) * 100 || 0).toFixed(0)}% coverage`} icon={<CheckCircle size={20} color="var(--status-green-text)" />} />
-                <StatCard title="Closed Deals" value={closed} icon={<BarChart3 size={20} color="var(--text-primary)" />} />
-                <StatCard title="High Priority Active" value={highPriority} icon={<ListFilter size={20} color="var(--status-red-text)" />} />
+            <div className="p-4 overflow-auto flex-1">
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                    <StatCard title="Total Pipeline" value={total} icon={<Users size={20} color="var(--primary-blue)" />} />
+                    <StatCard title="Contacted Leads" value={contacted} subtext={`${((contacted / total) * 100 || 0).toFixed(0)}% coverage`} icon={<CheckCircle size={20} color="var(--status-green-text)" />} />
+                    <StatCard title="Closed Deals" value={closed} icon={<BarChart3 size={20} color="var(--text-primary)" />} />
+                    <StatCard title="High Priority Active" value={highPriority} icon={<ListFilter size={20} color="var(--status-red-text)" />} />
+                </div>
             </div>
         </div>
     );

@@ -1,0 +1,164 @@
+/* ActivityPage-specific styles (if any remain, mostly action-badge or specific table tweaks) */
+/* The main layout and header are now handled by page-header.css */
+
+.activity-content-wrapper {
+    flex: 1;
+    overflow: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.activity-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+/* Table overrides specific to activity log usage */
+.table-container {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    background: var(--bg-surface);
+}
+
+.activity-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 800px;
+}
+
+.activity-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 0 var(--border-default);
+}
+
+.activity-table th {
+    padding: 0 24px;
+    height: 48px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-default);
+    white-space: nowrap;
+}
+
+.activity-table td {
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-main);
+    transition: background-color 0.1s;
+}
+
+/* Action Badges in Activity Table */
+.action-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.action-badge.update {
+    background: var(--primary-50);
+    color: var(--primary-700);
+    border: 1px solid var(--primary-100);
+}
+
+.action-badge.delete {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid #fecaca;
+}
+
+/* Empty State */
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem;
+    text-align: center;
+    background: linear-gradient(to bottom, white, var(--gray-50));
+}
+
+.empty-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: var(--gray-100);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: var(--gray-400);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.empty-state h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+    margin-bottom: 0.75rem;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    color: var(--gray-500);
+    max-width: 300px;
+    line-height: 1.5;
+}
+
+/* Undo Button */
+.undo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    color: var(--primary-600);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+}
+
+.undo-btn:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-200);
+}
+
+/* .page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+} */

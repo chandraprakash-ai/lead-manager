@@ -1,5 +1,6 @@
-import { RefreshCw, CheckSquare, Save } from 'lucide-react';
+import { RefreshCw, CheckSquare, Save, History } from 'lucide-react';
 import './LeadsHeader.css';
+import { useState } from 'react';
 
 interface LeadsHeaderProps {
     title: string;
@@ -11,10 +12,11 @@ interface LeadsHeaderProps {
     onImport: () => void;
     hasPendingChanges?: boolean;
     onSave?: () => void;
+    onActivityClick?: () => void;
 }
 
 export const LeadsHeader = ({
-    title, subtitle, count, isSyncing, saveStatus, onSync, onImport, hasPendingChanges, onSave
+    title, subtitle, count, isSyncing, saveStatus, onSync, onImport, hasPendingChanges, onSave, onActivityClick
 }: LeadsHeaderProps) => {
     return (
         <header className="page-header">
@@ -53,6 +55,17 @@ export const LeadsHeader = ({
             </div>
 
             <div className="header-actions">
+                {/* Activity History */}
+                {onActivityClick && (
+                    <button
+                        className="btn btn-secondary"
+                        onClick={onActivityClick}
+                        title="View Activity History"
+                    >
+                        <History size={14} />
+                    </button>
+                )}
+
                 {hasPendingChanges && onSave && (
                     <button
                         className="btn btn-primary"

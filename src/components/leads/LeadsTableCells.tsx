@@ -63,25 +63,28 @@ export const PrioritySelect = ({ value, onChange }: { value: PriorityLevel, onCh
     );
 };
 
-export const StageSelect = ({ value, onChange }: { value: DealStage, onChange: (v: DealStage) => void }) => {
+export const StageSelect = ({ value, onChange }: { value: DealStage | 'Contacted', onChange: (v: DealStage) => void }) => {
+    // Legacy support
+    const normalizedValue = value === 'Contacted' ? 'Contacting' : value;
+
     const s = {
         'New': { bg: 'var(--primary-50)', col: 'var(--primary-700)' },
-        'Contacted': { bg: 'var(--warning-bg)', col: 'var(--warning-text)' },
+        'Contacting': { bg: 'var(--warning-bg)', col: 'var(--warning-text)' },
         'Interested': { bg: 'var(--success-bg)', col: 'var(--success-text)' },
         'Proposal': { bg: 'var(--info-bg)', col: 'var(--info-text)' },
         'Closed': { bg: 'var(--success-bg)', col: 'var(--success-text)' },
         'Lost': { bg: 'var(--danger-bg)', col: 'var(--danger-text)' },
-    }[value] || { bg: 'transparent', col: 'inherit' };
+    }[normalizedValue] || { bg: 'transparent', col: 'inherit' };
 
     return (
         <select
             className="no-arrow tag w-full text-center cursor-pointer"
-            value={value}
+            value={normalizedValue}
             onChange={(e) => onChange(e.target.value as DealStage)}
             style={{ backgroundColor: s.bg, color: s.col }}
         >
             <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
+            <option value="Contacting">Contacting</option>
             <option value="Interested">Interested</option>
             <option value="Proposal">Proposal</option>
             <option value="Closed">Closed</option>

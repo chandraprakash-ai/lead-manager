@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import {
     AlertCircle, Building2, CheckSquare, FileText, Globe, Layers, Link, MapPin,
     MessageSquare, Phone, Plus, Share2, Star, Tag, Mail, Calendar, Award
@@ -6,6 +6,7 @@ import {
 import type { Lead, CustomField } from '../../../types';
 import { HeaderLabel, PrioritySelect, StageSelect, WebsiteStatusSelect } from '../LeadsTableCells';
 import './LeadsTable.css';
+import { useLocalStorage } from '../../../hooks/useLocalStorage';
 
 interface LeadsTableProps {
     leads: Lead[];
@@ -23,14 +24,14 @@ interface LeadsTableProps {
 // Helper for resizable headers
 const ResizableHeader = ({ col, label, width, sortConfig, onSort, onResizeStart }: any) => (
     <th
-        style={{ width }}
+        style={{ width, minWidth: width }} // Ensure width is respected
         className={`resizable-th ${sortConfig?.field === col ? 'sorted' : ''}`}
         onClick={() => onSort(col)}
     >
-        <div className="flex items-center gap-2">
+        <div className="lt-th-content">
             {label}
             {sortConfig?.field === col && (
-                <span className="text-xs text-[var(--primary-500)]">
+                <span className="text-xs lt-sort-icon">
                     {sortConfig.order === 'asc' ? '↑' : '↓'}
                 </span>
             )}
@@ -56,10 +57,10 @@ export const LeadsTable = ({
     onOpenColumnManager
 }: LeadsTableProps) => {
     // Local state for column widths (visual only)
-    const [colWidths, setColWidths] = useState<Record<string, number>>({
+    const [colWidths, setColWidths] = useLocalStorage<Record<string, number>>('leads_table_column_widths', {
         checkbox: 40, sn: 60, business_name: 220, email: 200, priority: 140, deal_stage: 160,
         contacted: 100, website_status: 150, social: 180, website: 180,
-        phone: 150, rating: 100, score: 100, reviews: 100, city: 140, niche: 140, notes: 300
+        phone: 150, rating: 100, score: 100, reviews: 100, city: 140, country: 140, map: 150, niche: 140, notes: 300
     });
 
     const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
@@ -124,6 +125,8 @@ export const LeadsTable = ({
                         {visibleColumns.has('score') && <ResizableHeader col="score" label={<HeaderLabel icon={Award} text="Score" />} width={colWidths.score} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('reviews') && <ResizableHeader col="reviews" label={<HeaderLabel icon={MessageSquare} text="Reviews" />} width={colWidths.reviews} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('city') && <ResizableHeader col="city" label={<HeaderLabel icon={MapPin} text="City" />} width={colWidths.city} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
+                        {visibleColumns.has('country') && <ResizableHeader col="country" label={<HeaderLabel icon={Globe} text="Country" />} width={colWidths.country} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
+                        {visibleColumns.has('map') && <ResizableHeader col="map" label={<HeaderLabel icon={MapPin} text="Map" />} width={colWidths.map} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {visibleColumns.has('niche') && <ResizableHeader col="niche" label={<HeaderLabel icon={Tag} text="Niche" />} width={colWidths.niche} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />}
                         {customFields && customFields.map(cf => visibleColumns.has(cf.key) && (
                             <ResizableHeader key={cf.id} col={cf.key} label={cf.name} width={colWidths[cf.key] || 150} sortConfig={sortConfig} onSort={onSortChange} onResizeStart={startResize} />
@@ -218,6 +221,36 @@ export const LeadsTable = ({
                                 {visibleColumns.has('score') && <td className="lt-center"><span className="lt-text-main">{lead.score ?? lead.custom_data?.score ?? '-'}</span></td>}
                                 {visibleColumns.has('reviews') && <td className="lt-center"><span className="lt-text-muted">{lead.reviews || 0}</span></td>}
                                 {visibleColumns.has('city') && <td><span className="lt-text-main">{lead.city}</span></td>}
+                                {visibleColumns.has('country') && <td>
+                                    <input
+                                        className="lt-input"
+                                        value={lead.country || ''}
+                                        onChange={(e) => onUpdateLead(lead.id, 'country', e.target.value)}
+                                        placeholder="Country"
+                                    />
+                                </td>}
+                                {visibleColumns.has('map') && <td>
+                                    <div className="flex items-center h-full">
+                                        <input
+                                            className="lt-input flex-1 min-w-0"
+                                            value={lead.map || ''}
+                                            onChange={(e) => onUpdateLead(lead.id, 'map', e.target.value)}
+                                            placeholder="Map Link"
+                                        />
+                                        {lead.map && (
+                                            <a
+                                                href={lead.map}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="px-2 text-gray-400 hover:text-blue-500"
+                                                title="Open Map"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <MapPin size={14} />
+                                            </a>
+                                        )}
+                                    </div>
+                                </td>}
                                 {visibleColumns.has('niche') && <td className="lt-center">
                                     <span className="lt-tag">{lead.niche}</span>
                                 </td>}

@@ -76,3 +76,22 @@ export const fetchUniqueCities = async () => {
     const cities = Array.from(new Set(data.map(item => item.city).filter(Boolean)));
     return cities.sort();
 };
+
+export const fetchCountriesWithCities = async () => {
+    const { data, error } = await supabase.from('leads').select('country, city');
+    if (error) throw error;
+
+    const map: Record<string, Set<string>> = {};
+    data.forEach(item => {
+        const country = item.country || 'Unknown';
+        const city = item.city || 'Unknown';
+        if (!map[country]) map[country] = new Set();
+        map[country].add(city);
+    });
+
+    // Convert to sorted array of objects
+    return Object.entries(map).map(([country, citiesSet]) => ({
+        country,
+        cities: Array.from(citiesSet).sort()
+    })).sort((a, b) => a.country.localeCompare(b.country));
+};

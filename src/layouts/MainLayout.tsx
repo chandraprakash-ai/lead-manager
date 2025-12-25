@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MapPin, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, Briefcase, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import './MainLayout.css';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -75,6 +75,12 @@ export default function MainLayout() {
                             ))}
                         </div>
                     )}
+                    <div className="my-2 border-t border-[var(--border-subtle)]"></div>
+
+                    {/* Countries */}
+                    <NavLink to="/countries" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={isCollapsed ? "All Countries" : ""}>
+                        <Globe size={16} className="nav-icon" /> {!isCollapsed && "All Countries"}
+                    </NavLink>
                 </nav>
 
                 <div className="sidebar-footer">

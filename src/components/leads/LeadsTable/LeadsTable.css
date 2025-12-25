@@ -12,10 +12,12 @@
 }
 
 .lt-table {
-    width: 100%;
+    width: auto;
+    min-width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 14px;
+    table-layout: fixed;
 }
 
 /* --- Header --- */
@@ -24,13 +26,31 @@
     color: var(--text-muted);
     font-weight: 500;
     text-align: left;
-    padding: 14px 16px;
+    padding: 0;
+    /* Removing padding from TH, moving to inner div */
     border-bottom: 1px solid var(--border-subtle);
     border-right: 1px solid var(--border-subtle);
     white-space: nowrap;
     position: relative;
     transition: background 0.2s;
     user-select: none;
+    overflow: hidden;
+    /* Ensure content stays within width */
+}
+
+.lt-th-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lt-sort-icon {
+    color: var(--primary-500);
 }
 
 .lt-table th:last-child {
@@ -52,13 +72,20 @@
     right: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: 6px;
     cursor: col-resize;
+    z-index: 10;
     transition: background 0.2s;
 }
 
 .resizable-th:hover .resizer {
-    background: var(--primary-200);
+    background: var(--gray-300);
+    /* Use gray for visibility */
+}
+
+.resizer:hover,
+.resizer:active {
+    background: var(--primary-400) !important;
 }
 
 /* --- Body Cells --- */
@@ -100,6 +127,47 @@
     accent-color: var(--primary-600);
     cursor: pointer;
     vertical-align: middle;
+    margin: 0 16px;
+    /* Added spacing */
+}
+
+/* Sticky First Column (Checkbox) - Width approx 48px */
+.lt-table th:first-child,
+.lt-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 20;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+}
+
+.lt-table th:first-child {
+    z-index: 30;
+}
+
+.lt-table tbody tr:hover td:first-child {
+    background: var(--bg-hover);
+}
+
+/* Sticky Second Column (SN) - Starts after first column */
+.lt-table th:nth-child(2),
+.lt-table td:nth-child(2) {
+    position: sticky;
+    /* Adjust this value if the checkbox column width changes. 
+       Currently checkbox TH has width, plus padding/borders. 
+       Usually around 40-50px. Let's assume ~48px. */
+    left: 48px;
+    z-index: 20;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+}
+
+.lt-table th:nth-child(2) {
+    z-index: 30;
+}
+
+.lt-table tbody tr:hover td:nth-child(2) {
+    background: var(--bg-hover);
 }
 
 .lt-checkbox-lg {
@@ -145,6 +213,7 @@
 
 .lt-input[type=number] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .lt-text-muted {
