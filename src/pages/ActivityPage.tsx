@@ -50,7 +50,7 @@ export default function ActivityPage() {
                                     {reversedHistory.map((action, index) => {
                                         const isLatest = index === 0;
                                         // Helper validation for badge style
-                                        const isUpdate = action.name.toLowerCase().includes('update');
+
                                         const isDelete = action.name.toLowerCase().includes('delete');
                                         const badgeClass = `action-badge ${isDelete ? 'delete' : 'update'}`;
 

@@ -7,6 +7,7 @@ import type { Lead, CustomField } from '../../../types';
 import { HeaderLabel, PrioritySelect, StageSelect, WebsiteStatusSelect } from '../LeadsTableCells';
 import './LeadsTable.css';
 import { useLocalStorage } from '../../../hooks/useLocalStorage';
+import { WebsitePreview } from '../../common/WebsitePreview';
 
 interface LeadsTableProps {
     leads: Lead[];
@@ -203,15 +204,17 @@ export const LeadsTable = ({
                                 </td>}
                                 {visibleColumns.has('website') && <td>
                                     {lead.website ? (
-                                        <a
-                                            href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="lt-text-link hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            {lead.website.replace(/^https?:\/\/(www\.)?/, '')}
-                                        </a>
+                                        <WebsitePreview url={lead.website}>
+                                            <a
+                                                href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="lt-text-link hover:underline"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {lead.website.replace(/^https?:\/\/(www\.)?/, '')}
+                                            </a>
+                                        </WebsitePreview>
                                     ) : <span className="lt-text-muted">-</span>}
                                 </td>}
                                 {visibleColumns.has('phone') && <td>
