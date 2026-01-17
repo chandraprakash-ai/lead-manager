@@ -6,7 +6,6 @@ import {
 import type { Lead, CustomField } from '../../../types';
 import { HeaderLabel, PrioritySelect, StageSelect, WebsiteStatusSelect } from '../LeadsTableCells';
 import './LeadsTable.css';
-import { useLocalStorage } from '../../../hooks/useLocalStorage';
 import { WebsitePreview } from '../../common/WebsitePreview';
 
 interface LeadsTableProps {
@@ -57,35 +56,80 @@ export const LeadsTable = ({
     onSortChange,
     onOpenColumnManager
 }: LeadsTableProps) => {
-    // Local state for column widths (visual only)
-    const [colWidths, setColWidths] = useLocalStorage<Record<string, number>>('leads_table_column_widths', {
-        checkbox: 40, sn: 60, business_name: 220, email: 200, priority: 140, deal_stage: 160,
-        contacted: 100, website_status: 150, social: 180, website: 180,
-        phone: 150, rating: 100, score: 100, reviews: 100, city: 140, country: 140, map: 150, niche: 140, notes: 300
-    });
+    // --- Optimized Resizing Logic ---
 
+    // 1. Initial Load from LocalStorage
+    const getInitialWidths = () => {
+        try {
+            const saved = localStorage.getItem('leads_table_column_widths');
+            if (saved) return JSON.parse(saved);
+        } catch (e) { console.error('Error loading widths', e); }
+
+        return {
+            checkbox: 40, sn: 60, business_name: 220, email: 200, priority: 140, deal_stage: 160,
+            contacted: 100, website_status: 150, social: 180, website: 180,
+            phone: 150, rating: 100, score: 100, reviews: 100, city: 140, country: 140, map: 150, niche: 140, notes: 300
+        };
+    };
+
+    const [colWidths, setColWidths] = React.useState<Record<string, number>>(getInitialWidths);
     const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
+    const rafRef = useRef<number | null>(null);
 
     const startResize = (e: React.MouseEvent, col: string) => {
         e.preventDefault();
+        e.stopPropagation(); // Stop sorting trigger
         const startWidth = colWidths[col] || 150;
         resizingRef.current = { col, startX: e.clientX, startWidth };
+
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
     };
 
     const handleMouseMove = (e: MouseEvent) => {
         if (!resizingRef.current) return;
+
         const { col, startX, startWidth } = resizingRef.current;
         const diff = e.clientX - startX;
-        setColWidths(prev => ({ ...prev, [col]: Math.max(50, startWidth + diff) }));
+        const newWidth = Math.max(50, startWidth + diff);
+
+        // Throttle with RAF
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+            setColWidths(prev => ({ ...prev, [col]: newWidth }));
+        });
     };
 
     const handleMouseUp = () => {
+        if (resizingRef.current) {
+            // Save final state to LocalStorage once
+            // We need to access the LATEST colWidths here. 
+            // Since we can't easily access state inside this closure without ref or dependency,
+            // we will manually rely on the SetState functional update to get it, OR just re-read state?
+            // Actually, the easiest way is to use a ref to track current widths for saving.
+        }
+
         resizingRef.current = null;
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
     };
+
+    // Effect to persist widths whenever they change (debounced would be best, but we want save-on-stop)
+    // Actually, simplest is to use an Effect that debounces saving to LS.
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            localStorage.setItem('leads_table_column_widths', JSON.stringify(colWidths));
+        }, 500); // Save 500ms after last change (e.g. end of drag)
+        return () => clearTimeout(timer);
+    }, [colWidths]);
 
     const toggleSelect = (id: string) => {
         const next = new Set(selectedIds);
@@ -148,6 +192,7 @@ export const LeadsTable = ({
                     </tr>
                 </thead>
                 <tbody>
+                    {/* ... body remains unchanged (I will exclude it from replacement to minimize churn, wait, the tool requires contiguous block replacement. I should include it or stop before it.) */}
                     {leads.map((lead, index) => {
                         const isDirty = !!pendingUpdates[lead.id];
                         return (

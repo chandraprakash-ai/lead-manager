@@ -179,11 +179,24 @@
     font-weight: 500;
 }
 
+/* Divider */
+.sidebar-divider {
+    height: 1px;
+    margin: 8px 12px;
+    background: var(--border-subtle);
+}
+
+.sidebar.collapsed .sidebar-divider {
+    margin: 8px 8px;
+}
+
 /* Footer */
 .sidebar-footer {
-    padding: 16px;
+    padding: 8px;
     border-top: 1px solid var(--border-default);
     background: var(--bg-surface);
+    position: relative;
+    overflow: visible;
 }
 
 .sidebar.collapsed .sidebar-footer {
@@ -200,8 +213,32 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     background: var(--bg-app);
     position: relative;
-    /* Isolate stacking context */
+}
+
+/* Custom Scrollbar */
+.main-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.main-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
+}
+
+/* Firefox scrollbar */
+.main-content {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
 }

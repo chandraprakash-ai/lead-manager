@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://leadmanager.app/sitemap.xml
+
+# Block admin and API routes from indexing
+Disallow: /api/
+Disallow: /settings/
