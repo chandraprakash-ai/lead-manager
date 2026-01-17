@@ -10,7 +10,7 @@
 -- STEP 1: Add user_id to leads table
 -- ==========================================
 ALTER TABLE leads 
-ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
+ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) DEFAULT auth.uid();
 
 -- Backfill existing leads with the first authenticated user (if any)
 -- IMPORTANT: Run this only once during migration
@@ -22,7 +22,7 @@ ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
 -- STEP 2: Add user_id to custom_fields table
 -- ==========================================
 ALTER TABLE custom_fields 
-ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
+ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) DEFAULT auth.uid();
 
 -- Backfill existing custom_fields
 -- UPDATE custom_fields SET user_id = (SELECT id FROM auth.users LIMIT 1) WHERE user_id IS NULL;

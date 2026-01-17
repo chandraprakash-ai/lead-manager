@@ -1,21 +1,13 @@
 import { useEffect, useState } from 'react';
 import './HeroDemo.css';
 
-// Premium demo data - feels real
+// Premium demo data - Modern Tech companies
 const DEMO_LEADS = [
-    { name: 'Velocity Ventures', stage: 'Proposal', niche: 'SaaS', priority: 'High' },
-    { name: 'Atlas Coffee Labs', stage: 'Interested', niche: 'F&B', priority: 'Medium' },
-    { name: 'Meridian Health', stage: 'Contacting', niche: 'Healthcare', priority: 'High' },
-    { name: 'Nexus Consulting', stage: 'New', niche: 'Consulting', priority: 'Low' },
+    { name: 'Linear', stage: 'Proposal', niche: 'SaaS', priority: 'High' },
+    { name: 'Vercel', stage: 'Interested', niche: 'DevTools', priority: 'Medium' },
+    { name: 'Raycast', stage: 'Contacting', niche: 'Productivity', priority: 'High' },
+    { name: 'Figma', stage: 'New', niche: 'Design', priority: 'Low' },
 ];
-
-const STAGE_COLORS: Record<string, string> = {
-    New: '#52525b',
-    Contacting: '#3b82f6',
-    Interested: '#a855f7',
-    Proposal: '#f59e0b',
-    Closed: '#22c55e',
-};
 
 export function HeroDemo() {
     const [visible, setVisible] = useState(false);
@@ -37,7 +29,14 @@ export function HeroDemo() {
                 <div className="hero-demo__dots">
                     <span></span><span></span><span></span>
                 </div>
-                <div className="hero-demo__title">Pipeline Overview</div>
+                <div className="hero-demo__title">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    Search...
+                </div>
+                <div style={{ width: 40 }}></div> {/* Spacer for balance */}
             </div>
 
             {/* Main content */}
@@ -45,29 +44,29 @@ export function HeroDemo() {
                 {/* Stats Row */}
                 <div className={`hero-demo__stats ${statsVisible ? 'hero-demo__stats--visible' : ''}`}>
                     <div className="demo-stat">
-                        <span className="demo-stat__value">147</span>
-                        <span className="demo-stat__label">Total Leads</span>
+                        <span className="demo-stat__value">142</span>
+                        <span className="demo-stat__label">Total Active</span>
                     </div>
-                    <div className="demo-stat demo-stat--blue">
-                        <span className="demo-stat__value">89</span>
-                        <span className="demo-stat__label">Contacted</span>
+                    <div className="demo-stat">
+                        <span className="demo-stat__value" style={{ color: '#60A5FA' }}>84</span>
+                        <span className="demo-stat__label">In Progress</span>
                     </div>
-                    <div className="demo-stat demo-stat--green">
-                        <span className="demo-stat__value">31</span>
-                        <span className="demo-stat__label">Closed</span>
+                    <div className="demo-stat">
+                        <span className="demo-stat__value" style={{ color: '#4ADE80' }}>29</span>
+                        <span className="demo-stat__label">Won Deals</span>
                     </div>
-                    <div className="demo-stat demo-stat--amber">
-                        <span className="demo-stat__value">21%</span>
-                        <span className="demo-stat__label">Conv. Rate</span>
+                    <div className="demo-stat">
+                        <span className="demo-stat__value" style={{ color: '#FBBF24' }}>18%</span>
+                        <span className="demo-stat__label">Conversion</span>
                     </div>
                 </div>
 
                 {/* Leads Table */}
                 <div className="hero-demo__table">
                     <div className="demo-table__header">
-                        <span>Company</span>
+                        <span>Organization</span>
                         <span>Stage</span>
-                        <span>Industry</span>
+                        <span>Sector</span>
                         <span>Priority</span>
                     </div>
                     {DEMO_LEADS.map((lead, i) => (
@@ -77,16 +76,7 @@ export function HeroDemo() {
                             style={{ animationDelay: `${1000 + i * 120}ms` }}
                         >
                             <span className="demo-table__name">{lead.name}</span>
-                            <span
-                                className="demo-table__stage"
-                                style={{
-                                    backgroundColor: `${STAGE_COLORS[lead.stage]}15`,
-                                    color: STAGE_COLORS[lead.stage],
-                                    border: `1px solid ${STAGE_COLORS[lead.stage]}30`
-                                }}
-                            >
-                                {lead.stage}
-                            </span>
+                            <span className="demo-table__stage">{lead.stage}</span>
                             <span className="demo-table__niche">{lead.niche}</span>
                             <span className={`demo-table__priority demo-table__priority--${lead.priority.toLowerCase()}`}>
                                 {lead.priority}
@@ -96,8 +86,13 @@ export function HeroDemo() {
                 </div>
             </div>
 
-            {/* Floating cursor */}
-            <div className="hero-demo__cursor"></div>
+            {/* Floating cursor SVG */}
+            <div className="hero-demo__cursor">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+                </svg>
+                <div className="cursor-label">Sarah is viewing</div>
+            </div>
         </div>
     );
 }

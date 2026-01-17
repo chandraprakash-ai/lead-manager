@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import '../styles/landing.css';
-import { LayoutDashboard, BarChart3, X, ArrowRight, Zap, Target, Star, TrendingDown, Clock, FileX } from 'lucide-react';
+import { LayoutDashboard, BarChart3, X, ArrowRight, Zap, Target, Star, TrendingDown } from 'lucide-react';
 import { PricingSection } from '../components/pricing/PricingSection';
 import { HeroDemo } from '../components/landing/HeroDemo';
 
@@ -27,21 +27,19 @@ export default function LandingPage() {
                 <div className="landing-hero-content">
                     <div className="trust-badge animate-fade-in">
                         <span className="trust-stars">★★★★★</span>
-                        <span className="trust-text">Trusted by 500+ Freelancers</span>
+                        <span className="trust-text">Loved by 500+ Freelancers</span>
                     </div>
                     <h1 className="landing-title animate-fade-in-up">
-                        Stop Losing Leads in <br />
-                        <span className="highlight-text">Messy Spreadsheets</span>
+                        Your Workflow,<br />
+                        <span className="highlight-text">Supercharged.</span>
                     </h1>
                     <p className="landing-subtitle animate-fade-in-up delay-100">
-                        The simple CRM for freelancers who want to close more deals without the chaos.
-                        Organize, track, and follow up in seconds.
+                        Stop juggling spreadsheets. Manage leads, track your pipeline, and close more deals with a tool designed for speed and clarity.
                     </p>
                     <div className="landing-cta-wrapper animate-fade-in-up delay-200">
                         <button className="btn-landing-primary" onClick={toggleAuth}>
-                            Start Closing More Deals <ArrowRight className="ml-2 w-4 h-4" />
+                            Start for Free <ArrowRight className="w-4 h-4" />
                         </button>
-                        <p className="cta-subtext">No credit card required · Free 14-day trial</p>
                     </div>
                 </div>
                 <div className="landing-hero-demo animate-fade-in-up delay-300">
@@ -49,50 +47,40 @@ export default function LandingPage() {
                 </div>
             </header>
 
-            {/* PAIN SECTION */}
-            <section className="landing-pain">
-                <div className="section-container">
-                    <h2 className="section-title text-center">Is your manual process holding you back?</h2>
-                    <div className="pain-grid">
-                        <div className="pain-card">
-                            <div className="pain-icon-wrapper"><FileX className="pain-icon" /></div>
-                            <h3>Leads slipping away</h3>
-                            <p>Without a system, valuable opportunities get buried in your inbox or lost in spreadsheet rows.</p>
-                        </div>
-                        <div className="pain-card">
-                            <div className="pain-icon-wrapper"><TrendingDown className="pain-icon" /></div>
-                            <h3>Unpredictable revenue</h3>
-                            <p>No visibility into your pipeline means you can't forecast income or plan for the future.</p>
-                        </div>
-                        <div className="pain-card">
-                            <div className="pain-icon-wrapper"><Clock className="pain-icon" /></div>
-                            <h3>Hours of busywork</h3>
-                            <p>Manual data entry eats up the time you should be spending on client work and strategy.</p>
+            {/* BENTO FEATURES */}
+            <section id="features" className="landing-features">
+                <h2 className="section-title">Everything you need to grow</h2>
+                <div className="bento-grid">
+                    {/* Card 1: Pipeline - Large */}
+                    <div className="bento-card large">
+                        <div className="bento-icon"><BarChart3 /></div>
+                        <h3 className="bento-title">Visual Pipeline</h3>
+                        <p className="bento-desc">See your entire sales funnel at a glance. Drag and drop deals as they progress from 'New' to 'Closed'. Never lose track of a lead again.</p>
+                        <div className="bento-visual">
+                            {/* Visual representation handled by CSS/Image */}
+                            <img src="/pipeline-preview.png" alt="Pipeline" className="absolute inset-0 w-full h-full object-cover opacity-50" onError={(e) => e.currentTarget.style.display = 'none'} />
                         </div>
                     </div>
-                </div>
-            </section>
 
-            {/* SOLUTION SECTION */}
-            <section id="features" className="landing-solution">
-                <div className="section-container">
-                    <h2 className="section-title text-center">A smarter way to manage your business</h2>
-                    <div className="features-grid">
-                        <div className="feature-card">
-                            <div className="feature-icon"><Target /></div>
-                            <h3 className="feature-title">Total Pipeline Clarity</h3>
-                            <p className="feature-desc">See exactly where every deal stands. Drag and drop leads through stages and know who to call next.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon"><Zap /></div>
-                            <h3 className="feature-title">Fast & Flexible</h3>
-                            <p className="feature-desc">Customizable fields that adapt to YOUR niche. Whether you sell design, code, or consulting.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon"><BarChart3 /></div>
-                            <h3 className="feature-title">Automatic Insights</h3>
-                            <p className="feature-desc">Know your conversion rates and projected revenue instantly. Make decisions based on data.</p>
-                        </div>
+                    {/* Card 2: Speed - Small */}
+                    <div className="bento-card">
+                        <div className="bento-icon"><Zap /></div>
+                        <h3 className="bento-title">Built for Speed</h3>
+                        <p className="bento-desc">Keyboard shortcuts, instant search, and zero lag. Designed for power users who hate waiting.</p>
+                    </div>
+
+                    {/* Card 3: Organization - Small */}
+                    <div className="bento-card">
+                        <div className="bento-icon"><Target /></div>
+                        <h3 className="bento-title">Niche Targeting</h3>
+                        <p className="bento-desc">Organize leads by specific niches or industries. Tailor your pitch and track what's converting best.</p>
+                    </div>
+
+                    {/* Card 4: Analytics - Large */}
+                    <div className="bento-card large">
+                        <div className="bento-icon"><TrendingDown /></div>
+                        <h3 className="bento-title">Automatic Insights</h3>
+                        <p className="bento-desc">We calculate conversion rates, projected revenue, and deal velocity automatically. Make data-driven decisions without the math.</p>
                     </div>
                 </div>
             </section>

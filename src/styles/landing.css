@@ -1,387 +1,308 @@
-/* Landing Page - Premium Bespoke Design */
+/* Modern Minimalist Landing Page - Linear/Raycast Aesthetic */
 
-/* Reset generic patterns */
-.landing-page {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #0a0a0b;
-    color: #e4e4e7;
-    min-height: 100vh;
-    overflow-x: hidden;
+/* Variables */
+:root {
+    --bg-page: #0B0C10;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --bg-card-hover: rgba(255, 255, 255, 0.06);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-Highlight: rgba(255, 255, 255, 0.15);
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-tertiary: #52525B;
+    --accent-glow: rgba(59, 130, 246, 0.5);
+    /* Blue glow */
 }
 
-/* ============================================
-   NAVIGATION - Minimal, architectural
-   ============================================ */
+/* Reset & Base */
+.landing-page {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+}
+
+/* Navigation - Floating Glass */
 .landing-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2rem 4rem;
-    position: relative;
-    z-index: 100;
+    padding: 1rem 1.5rem;
+    max-width: 1200px;
+    margin: 1rem auto;
+    width: calc(100% - 2rem);
+    background: rgba(11, 12, 16, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    /* Pill shape */
+    position: sticky;
+    top: 1rem;
+    z-index: 50;
 }
 
 .landing-logo {
-    font-weight: 500;
-    font-size: 0.875rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #e4e4e7;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-}
-
-.landing-logo svg {
-    width: 20px;
-    height: 20px;
-    opacity: 0.7;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
 }
 
 .btn-landing-outline {
     background: transparent;
-    color: #a1a1aa;
-    border: 1px solid #27272a;
-    padding: 0.625rem 1.25rem;
-    border-radius: 2px;
-    font-size: 0.75rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
     font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .btn-landing-outline:hover {
-    background: #18181b;
-    border-color: #3f3f46;
-    color: #e4e4e7;
+    color: var(--text-primary);
+    border-color: var(--border-Highlight);
+    background: var(--bg-card-hover);
 }
 
-/* ============================================
-   HERO - Asymmetric, editorial layout
-   ============================================ */
+/* Hero Section */
 .landing-hero {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    min-height: calc(100vh - 100px);
-    padding: 0 4rem 4rem;
-    gap: 0;
-    align-items: center;
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 1rem 8rem;
+    text-align: center;
+    overflow: visible;
+}
+
+/* Background Gradients for Hero */
+.landing-hero::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .landing-hero-content {
-    padding-right: 6rem;
+    position: relative;
+    z-index: 10;
+    max-width: 800px;
+    margin: 0 auto 4rem;
 }
 
-/* Trust badge - subtle, not screaming */
+/* Trust Badge */
 .trust-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #71717a;
-    margin-bottom: 3rem;
-    padding: 0;
-    background: none;
-    border-radius: 0;
+    padding: 0.375rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    margin-bottom: 2rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
 }
 
 .trust-stars {
     color: #fbbf24;
-    letter-spacing: -1px;
-    font-size: 0.75rem;
+    letter-spacing: -2px;
 }
 
-.trust-text {
-    margin-left: 0.5rem;
-}
-
-/* Title - Bold, architectural typography */
+/* Title */
 .landing-title {
-    font-size: clamp(3rem, 6vw, 5rem);
-    line-height: 0.95;
-    font-weight: 600;
-    letter-spacing: -0.04em;
-    color: #fafafa;
-    margin-bottom: 2rem;
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
 }
 
 .highlight-text {
-    display: block;
-    background: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #3b82f6 100%);
+    background: linear-gradient(to right, #60A5FA, #A78BFA);
     -webkit-background-clip: text;
     background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-top: 0.25rem;
+    color: transparent;
 }
 
-/* Subtitle - Refined, understated */
 .landing-subtitle {
-    font-size: 1.125rem;
-    color: #71717a;
-    line-height: 1.7;
-    max-width: 480px;
-    margin-bottom: 3rem;
-    font-weight: 400;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* CTA - Premium, intentional */
+/* CTA Buttons */
 .landing-cta-wrapper {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1.25rem;
+    align-items: center;
+    gap: 1rem;
 }
 
 .btn-landing-primary {
-    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 2px;
-    font-weight: 500;
-    font-size: 0.8125rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    border: none;
-    cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-landing-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #c084fc 0%, #818cf8 100%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.btn-landing-primary:hover::before {
-    opacity: 1;
+    gap: 0.5rem;
+    background: #FFFFFF;
+    color: #000000;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .btn-landing-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px -12px rgba(139, 92, 246, 0.4);
-}
-
-.btn-landing-primary svg,
-.btn-landing-primary span {
-    position: relative;
-    z-index: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
 .cta-subtext {
-    font-size: 0.75rem;
-    color: #52525b;
-    letter-spacing: 0.02em;
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
 }
 
-/* ============================================
-   HERO DEMO - Floating, premium glass card
-   ============================================ */
+/* Hero Demo Container - Floating Glass Effect */
 .landing-hero-demo {
     position: relative;
-    perspective: 1000px;
+    z-index: 10;
+    margin-top: 2rem;
+    border-radius: 16px;
+    box-shadow:
+        0 0 0 1px var(--border-subtle),
+        0 20px 50px -10px rgba(0, 0, 0, 0.5),
+        0 0 80px -20px rgba(56, 189, 248, 0.15);
+    /* Blue glow underneath */
 }
 
-/* Ambient glow */
-.landing-hero-demo::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
-    filter: blur(60px);
-    pointer-events: none;
-}
 
-/* Remove old image container styles */
-.landing-image-container,
-.landing-image {
-    display: none;
-}
-
-/* ============================================
-   PAIN SECTION - Editorial grid
-   ============================================ */
-.landing-pain {
-    padding: 8rem 4rem;
-    background: #0a0a0b;
-}
-
-.section-container {
-    max-width: 1400px;
+/* Bento Grid - Features */
+.landing-features {
+    padding: 6rem 1rem;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
 .section-title {
-    font-size: 2rem;
-    font-weight: 500;
-    color: #a1a1aa;
-    margin-bottom: 4rem;
-    letter-spacing: -0.02em;
-    text-align: left;
-}
-
-.section-title.text-center {
     text-align: center;
-}
-
-.pain-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: #27272a;
-}
-
-.pain-card {
-    padding: 3rem;
-    background: #0f0f10;
-    border: none;
-    border-radius: 0;
-    transition: background 0.3s ease;
-}
-
-.pain-card:hover {
-    background: #18181b;
-    transform: none;
-    box-shadow: none;
-}
-
-.pain-icon-wrapper {
-    width: 40px;
-    height: 40px;
-    background: transparent;
-    border: 1px solid #27272a;
-    border-radius: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.pain-icon {
-    color: #a855f7;
-    width: 20px;
-    height: 20px;
-}
-
-.pain-card h3 {
-    font-size: 1.125rem;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    color: #e4e4e7;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 4rem;
     letter-spacing: -0.01em;
 }
 
-.pain-card p {
-    color: #71717a;
-    line-height: 1.6;
-    font-size: 0.9375rem;
-}
-
-/* ============================================
-   SOLUTION / FEATURES - Offset layout
-   ============================================ */
-.landing-solution {
-    padding: 8rem 4rem;
-    background: #0f0f10;
-}
-
-.features-grid {
+.bento-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    grid-template-rows: repeat(2, minmax(300px, auto));
+    gap: 1.5rem;
 }
 
-.feature-card {
-    padding: 2.5rem;
-    background: transparent;
-    border: 1px solid #1f1f23;
-    border-radius: 0;
-    transition: all 0.4s ease;
+.bento-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.3s, border-color 0.3s;
+    overflow: hidden;
+    position: relative;
 }
 
-.feature-card:hover {
-    border-color: #3f3f46;
-    background: #18181b;
-    transform: none;
-    box-shadow: none;
+.bento-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-Highlight);
 }
 
-.feature-icon {
+.bento-card.large {
+    grid-column: span 2;
+}
+
+.bento-icon {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
-    border: 1px solid rgba(168, 85, 247, 0.2);
-    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 2rem;
-    color: #a855f7;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    color: #60A5FA;
 }
 
-.feature-title {
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: #e4e4e7;
-    margin: 0 0 1rem;
-    letter-spacing: -0.01em;
+.bento-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
 }
 
-.feature-desc {
-    color: #71717a;
+.bento-desc {
+    color: var(--text-secondary);
     line-height: 1.6;
-    margin: 0;
     font-size: 0.9375rem;
+    margin-bottom: 1.5rem;
 }
 
-/* ============================================
-   PROOF / TESTIMONIALS - Minimal cards
-   ============================================ */
+/* Bento Visuals */
+.bento-visual {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    position: relative;
+    overflow: hidden;
+    min-height: 150px;
+}
+
+/* Testimonials - Clean Cards */
 .landing-proof {
-    padding: 8rem 4rem;
-    background: #0a0a0b;
+    padding: 6rem 1rem;
+    border-top: 1px solid var(--border-subtle);
 }
 
 .testimonials-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-    margin-bottom: 6rem;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .testimonial-card {
-    padding: 2.5rem;
-    background: #0f0f10;
-    border: 1px solid #1f1f23;
-    border-radius: 0;
-}
-
-.testimonial-card .stars {
-    margin-bottom: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 2rem;
 }
 
 .testimonial-card .quote {
+    color: var(--text-secondary);
     font-size: 1rem;
-    color: #a1a1aa;
-    font-style: normal;
-    margin-bottom: 2rem;
-    line-height: 1.7;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
 }
 
 .testimonial-card .author {
@@ -393,256 +314,168 @@
 .author .avatar {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
-    border-radius: 0;
+    background: #27272a;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 500;
+    color: var(--text-secondary);
     font-size: 0.75rem;
-    color: white;
+    border: 1px solid var(--border-subtle);
 }
 
 .author .name {
-    font-weight: 500;
-    color: #e4e4e7;
-    font-size: 0.875rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9375rem;
 }
 
 .author .role {
-    font-size: 0.75rem;
-    color: #52525b;
-    margin-top: 0.125rem;
+    color: var(--text-tertiary);
+    font-size: 0.8125rem;
 }
 
-.logos-strip {
-    display: none;
-    /* Remove generic logos */
-}
-
-/* ============================================
-   FINAL CTA - Bold statement
-   ============================================ */
-.landing-cta-final {
-    padding: 10rem 4rem;
-    background: linear-gradient(180deg, #0f0f10 0%, #0a0a0b 100%);
-    text-align: center;
-    position: relative;
-}
-
-.landing-cta-final::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 400px;
-    background: radial-gradient(ellipse, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.cta-container {
-    position: relative;
-}
-
-.cta-container h2 {
-    font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 500;
-    margin-bottom: 1.5rem;
-    color: #fafafa;
-    letter-spacing: -0.02em;
-}
-
-.cta-container p {
-    font-size: 1rem;
-    color: #71717a;
-    margin-bottom: 3rem;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.btn-landing-primary.large {
-    padding: 1.125rem 2.5rem;
-    font-size: 0.875rem;
-}
-
-.cta-subtext-white {
-    margin-top: 1.5rem;
-    font-size: 0.75rem;
-    color: #52525b;
-}
-
-/* ============================================
-   FAQ - Clean, structured
-   ============================================ */
+/* FAQ */
 .landing-faq {
-    padding: 8rem 4rem;
-    background: #0a0a0b;
-}
-
-.faq-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    max-width: 1000px;
+    padding: 6rem 1rem;
+    max-width: 800px;
     margin: 0 auto;
 }
 
 .faq-item {
-    padding: 2rem;
-    background: #0f0f10;
-    border: 1px solid #1f1f23;
-    border-radius: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 1.5rem 0;
+}
+
+.faq-item:last-child {
+    border-bottom: none;
 }
 
 .faq-item h3 {
-    font-size: 0.9375rem;
+    font-size: 1.125rem;
     font-weight: 500;
-    color: #e4e4e7;
-    margin: 0 0 0.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
 }
 
 .faq-item p {
-    font-size: 0.875rem;
-    color: #71717a;
+    color: var(--text-secondary);
     line-height: 1.6;
-    margin: 0;
 }
 
-/* ============================================
-   FOOTER - Minimal, refined
-   ============================================ */
+/* Footer */
 .landing-footer {
-    background: #0a0a0b;
-    border-top: 1px solid #1f1f23;
-    padding-top: 4rem;
+    border-top: 1px solid var(--border-subtle);
+    background: #08080A;
+    padding: 4rem 1rem 2rem;
 }
 
 .footer-container {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 4rem 3rem;
-    display: flex;
-    justify-content: space-between;
-    gap: 3rem;
-}
-
-.footer-brand {
-    max-width: 280px;
-}
-
-.footer-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #a1a1aa;
-    margin-bottom: 1rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
 }
 
 .footer-brand p {
-    font-size: 0.875rem;
-    color: #52525b;
-    line-height: 1.6;
-}
-
-.footer-links {
-    display: flex;
-    gap: 5rem;
-}
-
-.footer-col {
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
+    color: var(--text-tertiary);
+    margin-top: 1rem;
+    max-width: 300px;
 }
 
 .footer-col h4 {
-    font-size: 0.6875rem;
-    font-weight: 500;
-    color: #52525b;
-    margin: 0 0 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
 }
 
 .footer-col a,
 .footer-col button {
-    font-size: 0.875rem;
-    color: #71717a;
+    display: block;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
     text-decoration: none;
+    font-size: 0.875rem;
     background: none;
     border: none;
     padding: 0;
-    text-align: left;
     cursor: pointer;
-    transition: color 0.2s;
+    text-align: left;
 }
 
 .footer-col a:hover,
 .footer-col button:hover {
-    color: #a1a1aa;
+    color: var(--text-primary);
 }
 
 .footer-bottom {
-    border-top: 1px solid #1f1f23;
-    padding: 1.5rem 4rem;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-subtle);
     text-align: center;
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
 }
 
-.footer-bottom p {
-    font-size: 0.75rem;
-    color: #3f3f46;
-    margin: 0;
-}
-
-/* ============================================
-   AUTH OVERLAY - Glass morphism
-   ============================================ */
+/* Auth Overlay */
 .auth-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(12px);
+    z-index: 100;
 }
 
 .auth-card {
-    background: #18181b;
-    border: 1px solid #27272a;
-    padding: 2.5rem;
-    border-radius: 0;
+    background: #18181B;
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    padding: 2rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .auth-close {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 1.5rem;
+    right: 1.5rem;
     background: none;
     border: none;
+    color: var(--text-tertiary);
     cursor: pointer;
-    color: #52525b;
-    transition: color 0.2s;
 }
 
 .auth-close:hover {
-    color: #a1a1aa;
+    color: var(--text-primary);
 }
 
-/* ============================================
-   ANIMATIONS - Subtle, refined
-   ============================================ */
+/* Responsive */
+@media (max-width: 768px) {
+    .landing-title {
+        font-size: 2.5rem;
+    }
+
+    .bento-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bento-card.large {
+        grid-column: span 1;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+}
+
+/* Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -656,7 +489,7 @@
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
     }
 
     to {
@@ -686,74 +519,4 @@
 .delay-300 {
     animation-delay: 0.3s;
     opacity: 0;
-}
-
-.delay-400 {
-    animation-delay: 0.4s;
-    opacity: 0;
-}
-
-/* ============================================
-   RESPONSIVE - Maintain aesthetics
-   ============================================ */
-@media (max-width: 1024px) {
-
-    .landing-nav,
-    .landing-hero,
-    .landing-pain,
-    .landing-solution,
-    .landing-proof,
-    .landing-faq,
-    .landing-cta-final {
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
-
-    .landing-hero {
-        grid-template-columns: 1fr;
-        gap: 4rem;
-        min-height: auto;
-        padding-top: 2rem;
-    }
-
-    .landing-hero-content {
-        padding-right: 0;
-        max-width: 600px;
-    }
-
-    .pain-grid,
-    .features-grid {
-        grid-template-columns: 1fr;
-        background: transparent;
-        gap: 1rem;
-    }
-
-    .pain-card {
-        border: 1px solid #1f1f23;
-    }
-
-    .testimonials-grid,
-    .faq-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 640px) {
-    .landing-nav {
-        padding: 1.5rem;
-    }
-
-    .landing-title {
-        font-size: 2.5rem;
-    }
-
-    .footer-container {
-        flex-direction: column;
-        padding: 0 2rem 2rem;
-    }
-
-    .footer-links {
-        gap: 2rem;
-        flex-wrap: wrap;
-    }
 }
