@@ -124,12 +124,15 @@
 }
 
 /* Title */
+/* Title */
 .landing-title {
     font-size: clamp(3rem, 6vw, 4.5rem);
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.02em;
     margin-bottom: 1.5rem;
+    color: #FFFFFF;
+    /* Hardcode white for safety */
     color: var(--text-primary);
 }
 
@@ -143,6 +146,7 @@
 .landing-subtitle {
     font-size: 1.25rem;
     line-height: 1.6;
+    color: #A1A1AA;
     color: var(--text-secondary);
     margin-bottom: 2.5rem;
     max-width: 600px;
@@ -210,6 +214,8 @@
     font-weight: 700;
     margin-bottom: 4rem;
     letter-spacing: -0.01em;
+    color: #FFFFFF;
+    color: var(--text-primary);
 }
 
 .bento-grid {
@@ -519,4 +525,65 @@
 .delay-300 {
     animation-delay: 0.3s;
     opacity: 0;
+}
+
+/* Missing CTA Section Styles */
+.landing-cta-final {
+    padding: 6rem 1rem;
+    text-align: center;
+    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 60%);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.cta-container {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.cta-container h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+}
+
+.cta-container p {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+.btn-landing-primary.large {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+/* Logos Strip */
+.logos-strip {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    opacity: 0.6;
+}
+
+.logo-text {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    margin-right: 1rem;
+}
+
+.logo-placeholder {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #A1A1AA;
+    color: var(--text-secondary);
+    letter-spacing: -0.02em;
 }

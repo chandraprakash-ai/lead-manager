@@ -16,7 +16,7 @@ export default function LandingPage() {
         <div className="landing-page">
             <nav className="landing-nav">
                 <div className="landing-logo">
-                    <LayoutDashboard className="h-6 w-6 text-blue-600" />
+                    <LayoutDashboard className="h-6 w-6 text-blue-500" />
                     <span>LeadManager</span>
                 </div>
                 <button className="btn-landing-outline" onClick={toggleAuth}>Sign In</button>
@@ -135,7 +135,7 @@ export default function LandingPage() {
                     <button className="btn-landing-primary large" onClick={toggleAuth}>
                         Start Your Free Trial <ArrowRight className="ml-2 w-5 h-5" />
                     </button>
-                    <p className="cta-subtext-white">No setup fees · Cancel anytime</p>
+                    <p className="cta-subtext">No setup fees · Cancel anytime</p>
                 </div>
             </section>
 
@@ -172,7 +172,7 @@ export default function LandingPage() {
                 <div className="footer-container">
                     <div className="footer-brand">
                         <div className="footer-logo">
-                            <LayoutDashboard className="h-5 w-5 text-blue-600" />
+                            <LayoutDashboard className="h-5 w-5 text-blue-500" />
                             <span>LeadManager</span>
                         </div>
                         <p>Simple CRM for freelancers who want to close more deals.</p>
@@ -207,17 +207,29 @@ export default function LandingPage() {
                         <div className="auth-card" onClick={e => e.stopPropagation()}>
                             <button className="auth-close" onClick={toggleAuth}><X /></button>
                             <div className="mb-6 text-center">
-                                <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-                                <p className="text-gray-500">Sign in to your account</p>
+                                <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
+                                <p className="text-gray-400">Sign in to your account</p>
                             </div>
                             <Auth
                                 supabaseClient={supabase}
                                 appearance={{
                                     theme: ThemeSupa,
-                                    variables: { default: { colors: { brand: '#2563eb', brandAccent: '#1d4ed8' } } },
+                                    variables: {
+                                        default: {
+                                            colors: {
+                                                brand: '#3b82f6',
+                                                brandAccent: '#2563eb',
+                                                inputText: 'white',
+                                                inputBackground: '#27272a',
+                                                inputBorder: '#3f3f46',
+                                                inputLabelText: '#a1a1aa',
+                                                inputPlaceholder: '#71717a',
+                                            }
+                                        }
+                                    },
                                 }}
                                 providers={[]}
-                                theme="light"
+                                theme="dark"
                             />
                         </div>
                     </div>
