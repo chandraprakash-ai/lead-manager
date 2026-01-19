@@ -1,29 +1,20 @@
 /* Modern Minimalist Landing Page - Linear/Raycast Aesthetic */
 
-/* Variables */
-:root {
-    --bg-page: #0B0C10;
-    --bg-card: rgba(255, 255, 255, 0.03);
-    --bg-card-hover: rgba(255, 255, 255, 0.06);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-Highlight: rgba(255, 255, 255, 0.15);
-    --text-primary: #FFFFFF;
-    --text-secondary: #A1A1AA;
-    --text-tertiary: #52525B;
-    --accent-glow: rgba(59, 130, 246, 0.5);
-    /* Blue glow */
-}
+/* Variables - Override with theme vars from index.css */
+/* Removed hardcoded root block - relying on global variables */
 
 /* Reset & Base */
 .landing-page {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: var(--bg-page);
-    color: var(--text-primary);
+    background-color: var(--bg-app);
+    color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    /* Optional: Subtle background pattern for depth */
     background-image:
-        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
-        radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+        radial-gradient(circle at 50% 0%, var(--primary-50) 0%, transparent 60%),
+        radial-gradient(circle at 100% 0%, var(--primary-50) 0%, transparent 40%);
 }
 
 /* Navigation - Floating Glass */
@@ -35,14 +26,16 @@
     max-width: 1200px;
     margin: 1rem auto;
     width: calc(100% - 2rem);
-    background: rgba(11, 12, 16, 0.7);
+    background: var(--bg-surface);
+    /* Uses theme surface */
+    opacity: 0.95;
     backdrop-filter: blur(12px);
     border: 1px solid var(--border-subtle);
     border-radius: 999px;
-    /* Pill shape */
     position: sticky;
     top: 1rem;
     z-index: 50;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .landing-logo {
@@ -51,12 +44,12 @@
     gap: 0.5rem;
     font-weight: 600;
     font-size: 1rem;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .btn-landing-outline {
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     border: 1px solid var(--border-subtle);
     padding: 0.5rem 1rem;
     border-radius: 999px;
@@ -67,9 +60,9 @@
 }
 
 .btn-landing-outline:hover {
-    color: var(--text-primary);
-    border-color: var(--border-Highlight);
-    background: var(--bg-card-hover);
+    color: var(--text-main);
+    border-color: var(--border-default);
+    background: var(--bg-hover);
 }
 
 /* Hero Section */
@@ -82,7 +75,6 @@
     overflow: visible;
 }
 
-/* Background Gradients for Hero */
 .landing-hero::before {
     content: '';
     position: absolute;
@@ -91,7 +83,8 @@
     transform: translateX(-50%);
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+    /* Hero glow - mostly invisible in light mode but kept for structure */
+    background: radial-gradient(circle, var(--primary-50) 0%, transparent 70%);
     filter: blur(80px);
     pointer-events: none;
     z-index: 0;
@@ -110,20 +103,17 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.08);
-    /* Slightly lighter glass */
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
     border-radius: 999px;
     margin-bottom: 2.5rem;
     font-size: 0.875rem;
-    color: var(--text-primary);
-    /* Brighter text */
+    color: var(--text-main);
     backdrop-filter: blur(8px);
 }
 
 .trust-stars {
     color: #FBBF24;
-    /* Warm yellow */
     letter-spacing: 1px;
 }
 
@@ -134,8 +124,7 @@
     line-height: 1.1;
     letter-spacing: -0.02em;
     margin-bottom: 1.5rem;
-    color: #FFFFFF;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .highlight-text {
@@ -148,8 +137,7 @@
 .landing-subtitle {
     font-size: 1.25rem;
     line-height: 1.6;
-    color: #A1A1AA;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     margin-bottom: 2.5rem;
     max-width: 600px;
     margin-left: auto;
@@ -168,8 +156,10 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: #FFFFFF;
-    color: #000000;
+    background: var(--text-main);
+    /* Inverted: Black bg on Light, White bg on Dark */
+    color: var(--bg-app);
+    /* Inverted text */
     padding: 0.75rem 1.5rem;
     border-radius: 999px;
     font-weight: 600;
@@ -181,15 +171,16 @@
 
 .btn-landing-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    opacity: 0.9;
+    box-shadow: var(--shadow-md);
 }
 
 .cta-subtext {
     font-size: 0.875rem;
-    color: var(--text-tertiary);
+    color: var(--text-faint);
 }
 
-/* Hero Demo Container - Floating Glass Effect */
+/* Hero Demo Container */
 .landing-hero-demo {
     position: relative;
     z-index: 10;
@@ -197,13 +188,11 @@
     border-radius: 16px;
     box-shadow:
         0 0 0 1px var(--border-subtle),
-        0 20px 50px -10px rgba(0, 0, 0, 0.5),
-        0 0 80px -20px rgba(56, 189, 248, 0.15);
-    /* Blue glow underneath */
+        var(--shadow-md),
+        0 0 80px -20px var(--primary-50);
 }
 
-
-/* Bento Grid - Features */
+/* Bento Grid */
 .landing-features {
     padding: 6rem 1rem;
     max-width: 1200px;
@@ -216,8 +205,7 @@
     font-weight: 700;
     margin-bottom: 4rem;
     letter-spacing: -0.01em;
-    color: #FFFFFF;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .bento-grid {
@@ -228,7 +216,7 @@
 }
 
 .bento-card {
-    background: var(--bg-card);
+    background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     border-radius: 20px;
     padding: 2rem;
@@ -240,8 +228,8 @@
 }
 
 .bento-card:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-Highlight);
+    background: var(--bg-hover);
+    border-color: var(--border-default);
 }
 
 .bento-card.large {
@@ -254,21 +242,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
     border-radius: 12px;
     margin-bottom: 1.5rem;
-    color: #60A5FA;
+    color: var(--primary-500);
 }
 
 .bento-title {
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.75rem;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .bento-desc {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     line-height: 1.6;
     font-size: 0.9375rem;
     margin-bottom: 1.5rem;
@@ -277,7 +265,7 @@
 /* Bento Visuals */
 .bento-visual {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-app);
     border-radius: 12px;
     border: 1px solid var(--border-subtle);
     position: relative;
@@ -285,7 +273,7 @@
     min-height: 150px;
 }
 
-/* Testimonials - Clean Cards */
+/* Testimonials */
 .landing-proof {
     padding: 6rem 1rem;
     border-top: 1px solid var(--border-subtle);
@@ -300,14 +288,14 @@
 }
 
 .testimonial-card {
-    background: var(--bg-card);
+    background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 2rem;
 }
 
 .testimonial-card .quote {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-size: 1rem;
     line-height: 1.6;
     margin-bottom: 1.5rem;
@@ -322,24 +310,24 @@
 .author .avatar {
     width: 40px;
     height: 40px;
-    background: #27272a;
+    background: var(--bg-hover);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-size: 0.75rem;
     border: 1px solid var(--border-subtle);
 }
 
 .author .name {
-    color: var(--text-primary);
+    color: var(--text-main);
     font-weight: 600;
     font-size: 0.9375rem;
 }
 
 .author .role {
-    color: var(--text-tertiary);
+    color: var(--text-faint);
     font-size: 0.8125rem;
 }
 
@@ -363,19 +351,18 @@
     font-size: 1.125rem;
     font-weight: 500;
     margin-bottom: 0.5rem;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .faq-item p {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     line-height: 1.6;
 }
 
 /* Footer */
 .landing-footer {
     border-top: 1px solid var(--border-subtle);
-    background: var(--bg-page);
-    /* Match page background */
+    background: var(--bg-app);
     padding: 6rem 1rem 3rem;
 }
 
@@ -385,19 +372,17 @@
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr;
     gap: 4rem;
-    /* Increased gap */
 }
 
 .footer-brand p {
-    color: var(--text-secondary);
-    /* Better readability */
+    color: var(--text-muted);
     margin-top: 1.5rem;
     max-width: 280px;
     line-height: 1.6;
 }
 
 .footer-col h4 {
-    color: var(--text-primary);
+    color: var(--text-main);
     font-size: 0.9375rem;
     font-weight: 600;
     margin-bottom: 1.5rem;
@@ -406,7 +391,7 @@
 .footer-col a,
 .footer-col button {
     display: block;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     margin-bottom: 1rem;
     text-decoration: none;
     font-size: 0.875rem;
@@ -420,8 +405,7 @@
 
 .footer-col a:hover,
 .footer-col button:hover {
-    color: #60A5FA;
-    /* Blue hover */
+    color: var(--primary-500);
 }
 
 .footer-bottom {
@@ -429,11 +413,11 @@
     padding-top: 2rem;
     border-top: 1px solid var(--border-subtle);
     text-align: center;
-    color: var(--text-tertiary);
+    color: var(--text-faint);
     font-size: 0.875rem;
 }
 
-/* Auth Overlay */
+/* Auth Overlay - Keep dark for contrast/focus */
 .auth-overlay {
     position: fixed;
     inset: 0;
@@ -447,7 +431,8 @@
 
 .auth-card {
     background: #18181B;
-    border: 1px solid var(--border-subtle);
+    /* Always dark card */
+    border: 1px solid #3f3f46;
     border-radius: 24px;
     padding: 2rem;
     width: 100%;
@@ -462,12 +447,12 @@
     right: 1.5rem;
     background: none;
     border: none;
-    color: var(--text-tertiary);
+    color: #a1a1aa;
     cursor: pointer;
 }
 
 .auth-close:hover {
-    color: var(--text-primary);
+    color: white;
 }
 
 /* Responsive */
@@ -536,11 +521,11 @@
     opacity: 0;
 }
 
-/* Missing CTA Section Styles */
+/* Styles for final CTA */
 .landing-cta-final {
     padding: 6rem 1rem;
     text-align: center;
-    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 60%);
+    background: radial-gradient(circle at 50% 50%, var(--primary-50) 0%, transparent 60%);
     border-top: 1px solid var(--border-subtle);
 }
 
@@ -557,11 +542,11 @@
     font-size: 2.25rem;
     font-weight: 700;
     line-height: 1.2;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .cta-container p {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-size: 1.125rem;
 }
 
@@ -585,14 +570,13 @@
 
 .logo-text {
     font-size: 0.875rem;
-    color: var(--text-tertiary);
+    color: var(--text-faint);
     margin-right: 1rem;
 }
 
 .logo-placeholder {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #A1A1AA;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     letter-spacing: -0.02em;
 }

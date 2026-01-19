@@ -15,40 +15,43 @@ import SettingsPage from './pages/SettingsPage';
 import BillingPage from './pages/BillingPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
-import AuthLayout from './layouts/AuthLayout';
 import LandingPage from './pages/LandingPage';
+import AuthLayout from './layouts/AuthLayout';
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <ActionHistoryProvider>
-            <BrowserRouter>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <ActionHistoryProvider>
+              <BrowserRouter>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/landing" element={<LandingPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
 
-                {/* Protected Routes */}
-                <Route element={<AuthLayout />}>
-                  <Route path="/" element={<MainLayout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="leads" element={<LeadsPage />} />
-                    <Route path="niches" element={<NichesPage />} />
-                    <Route path="cities" element={<CitiesPage />} />
-                    <Route path="countries" element={<CountriesPage />} />
-                    <Route path="activity" element={<ActivityPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                    <Route path="settings/billing" element={<BillingPage />} />
+                  {/* Protected Routes */}
+                  <Route element={<AuthLayout />}>
+                    <Route path="/" element={<MainLayout />}>
+                      <Route index element={<Dashboard />} />
+                      <Route path="leads" element={<LeadsPage />} />
+                      <Route path="niches" element={<NichesPage />} />
+                      <Route path="cities" element={<CitiesPage />} />
+                      <Route path="countries" element={<CountriesPage />} />
+                      <Route path="activity" element={<ActivityPage />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                      <Route path="settings/billing" element={<BillingPage />} />
+                    </Route>
                   </Route>
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </ActionHistoryProvider>
-        </ToastProvider>
-      </QueryClientProvider>
+                </Routes>
+              </BrowserRouter>
+            </ActionHistoryProvider>
+          </ToastProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

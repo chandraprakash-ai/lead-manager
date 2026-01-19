@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabaseClient';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import '../styles/landing.css';
-import { LayoutDashboard, BarChart3, X, ArrowRight, Zap, Target, Star, TrendingDown } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { LayoutDashboard, BarChart3, X, ArrowRight, Zap, Target, Star, TrendingDown, Moon, Sun } from 'lucide-react';
 import { PricingSection } from '../components/pricing/PricingSection';
 import { HeroDemo } from '../components/landing/HeroDemo';
 
@@ -11,6 +12,7 @@ import { HeroDemo } from '../components/landing/HeroDemo';
 export default function LandingPage() {
     const [showAuth, setShowAuth] = useState(false);
     const toggleAuth = () => setShowAuth(!showAuth);
+    const { theme, toggleTheme } = useTheme();
 
     return (
         <div className="landing-page">
@@ -19,7 +21,17 @@ export default function LandingPage() {
                     <LayoutDashboard className="h-6 w-6 text-blue-500" />
                     <span>LeadManager</span>
                 </div>
-                <button className="btn-landing-outline" onClick={toggleAuth}>Sign In</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button
+                        onClick={toggleTheme}
+                        className="btn-icon"
+                        style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex' }}
+                        aria-label="Toggle theme"
+                    >
+                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                    </button>
+                    <button className="btn-landing-outline" onClick={toggleAuth}>Sign In</button>
+                </div>
             </nav>
 
             {/* HERO SECTION */}

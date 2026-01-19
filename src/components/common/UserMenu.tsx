@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import { Settings, LogOut, ChevronUp, CreditCard, HelpCircle, Sparkles } from 'lucide-react';
+import { Settings, LogOut, ChevronUp, CreditCard, HelpCircle, Sparkles, Moon, Sun } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 import './UserMenu.css';
 
 interface UserMenuProps {
@@ -25,6 +26,7 @@ export function UserMenu({ user, plan = 'free' }: UserMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
 
     const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
     const initials = displayName
@@ -132,6 +134,17 @@ export function UserMenu({ user, plan = 'free' }: UserMenuProps) {
                     >
                         <HelpCircle size={16} />
                         Help & Support
+                    </button>
+
+                    <div className="user-menu__divider" />
+
+                    <button
+                        className="user-menu__item"
+                        onClick={() => { toggleTheme(); }}
+                        role="menuitem"
+                    >
+                        {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                     </button>
 
                     <div className="user-menu__divider" />
