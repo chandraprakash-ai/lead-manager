@@ -5,8 +5,9 @@
     background: var(--bg-app);
 }
 
+
 .pricing-section--landing {
-    background: linear-gradient(180deg, var(--gray-50) 0%, white 100%);
+    background: linear-gradient(180deg, var(--bg-app) 0%, var(--bg-surface) 100%);
 }
 
 /* Header */
@@ -71,8 +72,8 @@
 }
 
 .pricing-card--popular {
-    border-color: var(--primary-200);
-    background: linear-gradient(180deg, var(--primary-50) 0%, var(--bg-surface) 20%);
+    border-color: var(--primary-500);
+    background: linear-gradient(180deg, var(--primary-50) 0%, var(--bg-surface) 100%);
     box-shadow:
         0 4px 6px -1px rgba(59, 130, 246, 0.1),
         0 10px 15px -3px rgba(59, 130, 246, 0.1);

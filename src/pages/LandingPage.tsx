@@ -68,9 +68,21 @@ export default function LandingPage() {
                         <div className="bento-icon"><BarChart3 /></div>
                         <h3 className="bento-title">Visual Pipeline</h3>
                         <p className="bento-desc">See your entire sales funnel at a glance. Drag and drop deals as they progress from 'New' to 'Closed'. Never lose track of a lead again.</p>
-                        <div className="bento-visual">
-                            {/* Visual representation handled by CSS/Image */}
-                            <img src="/pipeline-preview.png" alt="Pipeline" className="absolute inset-0 w-full h-full object-cover opacity-50" onError={(e) => e.currentTarget.style.display = 'none'} />
+                        <div className="bento-visual pipeline-mock">
+                            <div className="pipeline-col">
+                                <div className="pipeline-header">New</div>
+                                <div className="pipeline-card-mock" />
+                                <div className="pipeline-card-mock" />
+                            </div>
+                            <div className="pipeline-col">
+                                <div className="pipeline-header">Qualified</div>
+                                <div className="pipeline-card-mock" />
+                            </div>
+                            <div className="pipeline-col">
+                                <div className="pipeline-header">Closed</div>
+                                <div className="pipeline-card-mock" />
+                                <div className="pipeline-card-mock" />
+                            </div>
                         </div>
                     </div>
 
